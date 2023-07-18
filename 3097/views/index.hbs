@@ -1,0 +1,12 @@
+<form method = "post" action="/validate">
+    <label>Логин</label>
+    <input type="text" name="login" value={{oldLogin}}>
+    <label>Пароль</label>
+    <input type="text" name="password" value={{oldPassword}}>
+    {{#if invalid}}
+        <div style="background-color: red;">
+            <span>Неверный Логин или пароль</span>
+        </div>
+    {{/if}}
+    <button type="submit">Отправить</button>
+</form>
