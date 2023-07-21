@@ -44,7 +44,8 @@ webserver.post('/validate', (req, res) => {
     if (correctData.login === req.body.login && correctData.password === req.body.password) {
         logLineSync(logFN, "validate completed");
 
-        res.send(`<p>login: ${req.body.login}<br>password: ${req.body.password}</p>`);
+        // res.send(`<p>login: ${req.body.login}<br>password: ${req.body.password}</p>`);
+        res.redirect('/');
     } else {
         logLineSync(logFN, "validate completed");
 
