@@ -44,13 +44,7 @@ webserver.post('/sendRequest', async (req, res) => {
 
     let body = {};
 
-    console.log(headers);
-    console.log(parameters);
-    console.log(requestData.requestUrl);
-
-    console.log(path.isAbsolute(requestData.requestUrl));
-
-    if (!path.isAbsolute(requestData.requestUrl)) res.status(400).end();
+    if (!requestData.requestUrl.startsWith('http://')) res.status(400).end();
 
     const response = await fetch(requestData.requestUrl, fetchOptions);
 
