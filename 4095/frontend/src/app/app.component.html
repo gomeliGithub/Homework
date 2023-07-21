@@ -1,0 +1,74 @@
+<div class="d-flex justify-content-center align-items-center vh-100">
+    <!--<div class="d-flex flex-column justify-content-center align-items-center me-5" id="completedRequestsContainer">
+        <div *ngIf="requestCompleted" class="badge text-bg-primary text-wrap">
+            <span>Метод: {{completedRequestMethod}}</span>
+            <span>{{completedRequestUrl}}</span>
+        </div>
+    </div>-->
+    <div class="d-flex flex-column justify-content-center align-items-center me-5" id="completedRequestsContainer">
+        
+    </div>
+    <div class="ms-5" id="createRequestForm">
+        <form [formGroup]="createRequestForm" novalidate>
+            <div class="form-group">
+                <label>Метод</label>
+                <select class="form-control" name="method" formControlName="method">
+                    <option *ngFor="let method of methods" value={{method}}>
+                        {{method}}
+                    </option>
+                </select>
+                <div class="alert alert-danger"
+                    *ngIf="createRequestForm.controls['method'].invalid && createRequestForm.controls['method'].touched">
+                    Не указан метод запроса
+                </div>
+            </div>
+            <div class="form-group">
+                <label>URL</label>
+                <input class="form-control" name="url" formControlName="url" />
+                <div class="alert alert-danger"
+                    *ngIf="createRequestForm.controls['url'].invalid && createRequestForm.controls['url'].touched">
+                    Не указан URL запроса
+                </div>
+            </div>
+            <div class="" id="headersContainer">
+                <label>Заголовки</label>
+            </div>
+            <div class="mt-3" id="parametersContainer">
+                <label>Параметры</label>
+            </div>
+            <div class="form-group mt-3">
+                <button class="btn btn-success ms-2" [disabled]="createRequestForm.invalid" (click)="submit()">
+                    Отправить запрос
+                </button>
+                <button class="btn btn-secondary ms-2" (click)="reset()">
+                    Очистить форму
+                </button>
+                <button class="btn btn-primary ms-2" (click)="addControlInputs('headers')">
+                    Добавить заголовок
+                </button>
+                <button class="btn btn-primary ms-2" (click)="addControlInputs('parameters')">
+                    Добавить параметр
+                </button>
+            </div>
+            <div *ngIf="requestCompleted" class="" id="requestResponse">
+                <div class="text-center mb-3">
+                    <label class="fw-bold fs-4">Ответ на запрос</label>
+                </div>
+                <div class="mb-3">
+                    <span class="fw-bold">Статус ответа: <span class="fw-normal">{{completedResponseStatusCode}}</span></span>
+                </div>
+                <div *ngIf="completedResponseBody" class="mb-3">
+                    <span class="fw-bold">Тело ответа</span>
+                    <p>{{completedResponseBody}}</p>
+                </div>
+                <div class="">
+                    <span class="fw-bold">Заголовки ответа</span>
+                    <p *ngFor="let header of completedResponseHeaders"> - {{header[0]}}: {{header[1]}}</p>
+                </div>
+            </div>
+            <div *ngIf="!requestCompleted && requestSended" class="text-center text-danger p-4">
+                <span>Не валидные данные запроса</span>
+            </div>
+        </form>
+    </div>
+</div>
