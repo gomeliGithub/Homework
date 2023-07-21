@@ -32,20 +32,26 @@ function logLineSync(logFilePath,logLine) {
 webserver.post('/sendRequest', async (req, res) => { 
     const requestData = req.body;
 
-    const headers = {};
+    const headers = serializeData(requestData.requestHeaders);
+    const parameters = serializeData(requestData.requestParameters);
+
+    const fetchOptions = {
+        method: requestData.requestMethod,
+        headers: headers
+    }
+
+    if (fetchOptions.method !== "GET") fetchOptions.body = parameters;
 
     let body = {};
 
-    requestData.requestHeaders.forEach(requestHeader => {
-        const data = Object.values(requestHeader);
+    console.log(headers);
+    console.log(parameters);
 
-        headers[data[0]] = data[1];
-    })
+    console.log(path.isAbsolute(requestData.requestUrl));
 
-    const response = await fetch(requestData.requestUrl, {
-        method: requestData.requestMethod,
-        headers: headers
-    });
+    if (!path.isAbsolute(requestData.requestUrl)) res.sendStatus(400).end();
+
+    const response = await fetch(requestData.requestUrl, fetchOptions);
 
     try {
         for await (const chunk of response.body) {
@@ -58,11 +64,21 @@ webserver.post('/sendRequest', async (req, res) => {
             body: body
         });
     } catch (err) {
-        res.send({
-            error: err.stack
-        })
+        res.sendStatus(500).end();
     }
 });
+
+function serializeData (data) {
+    const serializeDataObj = {};
+
+    data.forEach(dataValue => {
+        const dataValueArr = Object.values(dataValue);
+
+        serializeDataObj[dataValueArr[0]] = dataValueArr[1];
+    });
+
+    return serializeDataObj;
+}
 
 webserver.listen(port, () => {
     logLineSync(logFN, "web server running on port " + port);
