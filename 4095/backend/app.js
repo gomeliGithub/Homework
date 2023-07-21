@@ -49,7 +49,7 @@ webserver.post('/sendRequest', async (req, res) => {
 
     console.log(path.isAbsolute(requestData.requestUrl));
 
-    if (!path.isAbsolute(requestData.requestUrl)) res.sendStatus(400).end();
+    if (!path.isAbsolute(requestData.requestUrl)) res.status(400).end();
 
     const response = await fetch(requestData.requestUrl, fetchOptions);
 
@@ -64,7 +64,7 @@ webserver.post('/sendRequest', async (req, res) => {
             body: body
         });
     } catch (err) {
-        res.sendStatus(500).end();
+        res.status(500).end();
     }
 });
 
