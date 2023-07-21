@@ -46,6 +46,7 @@ webserver.post('/sendRequest', async (req, res) => {
 
     console.log(headers);
     console.log(parameters);
+    console.log(requestData.requestUrl);
 
     console.log(path.isAbsolute(requestData.requestUrl));
 
