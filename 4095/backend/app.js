@@ -11,7 +11,7 @@ webserver.use(express.urlencoded({ extended: false }));
 webserver.use(express.json());
 
 webserver.use(cors({
-    origin: 'http://localhost:4200'
+    origin: 'http://178.172.195.18:7980/' // 'http://localhost:4200'
 }));
 
 const port = 7980;
