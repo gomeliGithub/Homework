@@ -51,7 +51,10 @@ webserver.post('/validate', (req, res) => {
         logLineSync(logFN, "validate completed");
 
         // res.send(`<p>login: ${req.body.login}<br>password: ${req.body.password}</p>`);
-        res.redirect(302, `/data?login=${req.body.login}&password=${req.body.password}`);
+        const queryParamLogin = encodeURIComponent(req.body.login); 
+        const queryParamPassword = encodeURIComponent(req.body.password); 
+
+        res.redirect(302, `/data?login=${queryParamLogin}&password=${queryParamPassword}`);
     } else {
         logLineSync(logFN, "validate completed");
 
