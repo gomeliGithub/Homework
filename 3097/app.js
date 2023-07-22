@@ -26,10 +26,16 @@ function logLineSync(logFilePath,logLine) {
     fs.closeSync(logFd);
 }
 
-webserver.get('/', (_, res) => {
+webserver.get('/', (req, res) => {
     logLineSync(logFN, "get index.hbs completed");
 
     res.render('index', { layout: false });
+});
+
+webserver.get('/data', (req, res) => {
+    logLineSync(logFN, "get dataPage completed");
+
+    if (req.query.hasOwnProperty('login') && req.query.hasOwnProperty('login')) res.send(`<p>login: ${req.query.login}<br>password: ${req.query.password}</p>`);
 });
 
 webserver.post('/validate', (req, res) => { 
@@ -45,7 +51,7 @@ webserver.post('/validate', (req, res) => {
         logLineSync(logFN, "validate completed");
 
         // res.send(`<p>login: ${req.body.login}<br>password: ${req.body.password}</p>`);
-        res.redirect(302, '${req.body.login}<br>password: ${req.body.password}</p>');
+        res.redirect(302, `/data?login=${req.body.login}&password=${req.body.password}`);
     } else {
         logLineSync(logFN, "validate completed");
 
