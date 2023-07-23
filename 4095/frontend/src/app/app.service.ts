@@ -1,10 +1,12 @@
-import { Injectable } from '@angular/core';
+import { ComponentRef, Injectable, ViewContainerRef } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
+import { CompletedRequestComponent } from './completed-request/completed-request.component';
+
 import { environment } from '../environments/environment';
 
-import { IRequestParametersHeaders } from './@types/global';
+import { ICompletedRequestCreateOptions, IRequestParametersHeaders } from './@types/global';
 
 @Injectable({
     providedIn: 'root'
@@ -113,6 +115,24 @@ export class AppService {
         });
         
         return { headers, parameters };
+    }
+
+    createSaveRequest (viewRef: ViewContainerRef, componentRef: ComponentRef<CompletedRequestComponent>, createOptions: ICompletedRequestCreateOptions) {
+        componentRef = this.createCompletedRequestInstance(viewRef, createOptions);
+    }
+
+    createCompletedRequestInstance (viewRef: ViewContainerRef, createOptions: ICompletedRequestCreateOptions): ComponentRef<CompletedRequestComponent> {
+        // viewRef.clear();
+
+        const completedRequestComponent = viewRef.createComponent(CompletedRequestComponent);
+
+        completedRequestComponent.instance.requestStatusCode = createOptions.requestStatusCode;
+        completedRequestComponent.instance.requestMethod = createOptions.requestMethod;
+        completedRequestComponent.instance.requestURL = createOptions.requestURL;
+        completedRequestComponent.instance.requestHeaders = createOptions.requestHeaders;
+        completedRequestComponent.instance.requestParameters = createOptions.requestParameters;
+
+        return completedRequestComponent;
     }
 
     saveRequest (requestMethod: string, requestUrl: string, statusCode: string): void {

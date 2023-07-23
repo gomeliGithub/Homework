@@ -11,7 +11,7 @@ webserver.use(express.urlencoded({ extended: false }));
 webserver.use(express.json());
 
 webserver.use(cors({
-    origin: 'http://178.172.195.18:7981/' // 'http://localhost:4200'
+    origin: 'http://localhost:4200' // 'http://178.172.195.18:7981'
 }));
 
 const port = 7980;
@@ -42,9 +42,9 @@ webserver.post('/sendRequest', async (req, res) => {
 
     if (fetchOptions.method !== "GET") fetchOptions.body = parameters;
 
-    let body = {};
+    let body = {}; 
 
-    if (!requestData.requestUrl.startsWith('http://')) res.status(400).end();
+    if (!requestData.requestUrl.startsWith('http://') || (fetchOptions.method !== "GET" && fetchOptions.method !== "POST")) res.status(400).end();
 
     const response = await fetch(requestData.requestUrl, fetchOptions);
 

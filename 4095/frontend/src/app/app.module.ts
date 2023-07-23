@@ -8,9 +8,12 @@ import { AppComponent } from './app.component';
 
 import { AppService } from './app.service';
 
+import { CompletedRequestComponent } from './completed-request/completed-request.component';
+
 @NgModule({
     declarations: [
-        AppComponent
+        AppComponent,
+        CompletedRequestComponent
     ],
     imports: [
         BrowserModule,

@@ -1,7 +1,9 @@
-import { Component, OnInit } from '@angular/core';
-import { FormArray, FormControl, FormGroup, Validators } from '@angular/forms';
+import { Component, ComponentRef, OnInit, ViewChild, ViewContainerRef } from '@angular/core';
+import { FormControl, FormGroup, Validators } from '@angular/forms';
 
 import { AppService } from './app.service';
+
+import { CompletedRequestComponent } from './completed-request/completed-request.component';
 
 @Component({
     selector: 'app-root',
@@ -24,10 +26,15 @@ export class AppComponent implements OnInit {
     completedResponseHeaders: [string, any][] = [];
     completedResponseBody: string = ""
 
-    methods = [ 'GET', 'POST', 'PUT']
+    methods = [ 'GET', 'POST' ]
     headers = [ 'Accept', 'Accept-Language', 'Content-Language', 'Content-Type' ]
 
     constructor (private readonly appService: AppService) { }
+
+    @ViewChild(CompletedRequestComponent) completedRequestComponent: CompletedRequestComponent
+    @ViewChild('appСompletedRequests', { read: ViewContainerRef, static: false })
+    private completedRequestViewRef: ViewContainerRef;
+    private completedRequestComponentRef: ComponentRef<CompletedRequestComponent>;
 
     ngOnInit (): void {
         
@@ -50,7 +57,20 @@ export class AppComponent implements OnInit {
         this.requestSended = true;
 
         this.appService.sendRequest(method, url, headers, parameters).subscribe(data => {
-            this.appService.saveRequest(method, url, data['statusCode' as keyof Object].toString());
+            // this.appService.saveRequest(method, url, data['statusCode' as keyof Object].toString());
+
+
+
+            this.appService.createSaveRequest(this.completedRequestViewRef, this.completedRequestComponentRef, {
+                requestStatusCode: data['statusCode' as keyof Object] as unknown as number,
+                requestMethod: method,
+                requestURL: url,
+                requestHeaders: headers,
+                requestParameters: parameters
+            });
+
+
+
 
             this.completedRequestMethod = method;
             this.completedRequestUrl = url;
