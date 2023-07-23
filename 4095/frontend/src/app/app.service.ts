@@ -126,7 +126,7 @@ export class AppService {
 
         const completedRequestComponent = viewRef.createComponent(CompletedRequestComponent);
 
-        completedRequestComponent.instance.requestStatusCode = createOptions.requestStatusCode.toString();
+        completedRequestComponent.instance.requestStatusCode = createOptions.requestStatusCode.toString().slice(0, 1);
         completedRequestComponent.instance.requestMethod = createOptions.requestMethod;
         completedRequestComponent.instance.requestURL = createOptions.requestURL;
         completedRequestComponent.instance.requestHeaders = createOptions.requestHeaders;
