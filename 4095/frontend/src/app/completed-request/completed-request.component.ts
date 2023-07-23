@@ -8,7 +8,7 @@ import { Component, OnInit } from '@angular/core';
 export class CompletedRequestComponent implements OnInit {
     constructor () { }
 
-    requestStatusCode: number
+    requestStatusCode: string
     requestMethod: string
     requestURL: string
     requestHeaders: object[]
