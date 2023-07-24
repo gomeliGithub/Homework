@@ -25,8 +25,9 @@ export class AppComponent implements OnInit {
     completedRequestUrl: string = ""
 
     completedResponseStatusCode: string = ""
+    completedResponseContentType: string = ""
     completedResponseHeaders: [string, any][] = [];
-    completedResponseBody: string = ""
+    completedResponseBody: string | typeof Blob = ""
 
     methods = [ 'GET', 'POST' ]
     headers = [ 'Accept', 'Accept-Language', 'Content-Language', 'Content-Type' ]
@@ -71,9 +72,9 @@ export class AppComponent implements OnInit {
                 updatedSavedRequests: []
             }, this.savedRequests);
 
-            const contentType: string = this.completedResponseHeaders.find((headerArr => headerArr[0] === 'content-type')) as unknown as string;
-
             this.savedRequests = updatedSavedRequests;
+
+            this.completedResponseContentType = this.completedResponseHeaders.find((headerArr => headerArr[0] === 'content-type')) as unknown as string;
 
             this.completedRequestMethod = method;
             this.completedRequestUrl = url;
@@ -81,9 +82,9 @@ export class AppComponent implements OnInit {
             this.completedResponseStatusCode = data['statusCode' as keyof Object] as unknown as string;
             this.completedResponseHeaders = Object.entries(data['headers' as keyof Object]);
 
-            if (contentType === 'application/json') this.completedResponseBody = JSON.stringify(data['body' as keyof Object]);
-            if (contentType === ('text/html' || 'text/xml')) this.completedResponseBody = data['body' as keyof Object] as unknown as string;
-            // if (contentType === 'blob')
+            if (this.completedResponseContentType === 'application/json') this.completedResponseBody = JSON.stringify(data['body' as keyof Object]);
+            if (this.completedResponseContentType === ('text/plain' || 'text/html' || 'application/xml')) this.completedResponseBody = data['body' as keyof Object] as unknown as string;
+            if (this.completedResponseContentType === 'image/jpeg') this.completedResponseBody = data['body' as keyof Object] as unknown as typeof Blob;
 
             this.requestCompleted = true;
         });

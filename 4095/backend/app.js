@@ -50,15 +50,9 @@ webserver.post('/sendRequest', async (req, res) => {
 
     const responseHeaders = response.headers.raw();
 
-    if (responseHeaders['content-type'][0] === 'application/json') {
-        try {
-            for await (const chunk of response.body) {
-                body = JSON.parse(chunk.toString());
-            }
-        } catch (err) {
-            res.status(500).end();
-        }
-    } else res.send(response.body);
+    if (responseHeaders['content-type'][0] === 'application/json') body = JSON.parse(await response.json());
+    if (responseHeaders['content-type'][0] === 'image/jpeg') body = await response.blob();
+    if (responseHeaders['content-type'][0] === ('text/plain' || 'text/html' || 'application/xml')) body = await response.text();
 
     res.send({
         statusCode: response.status,
