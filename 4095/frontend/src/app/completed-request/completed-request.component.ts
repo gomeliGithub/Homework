@@ -1,12 +1,14 @@
 import { Component, OnInit } from '@angular/core';
 
+import { CompletedRequestService } from './completed-request.service';
+
 @Component({
     selector: 'app-completed-request',
     templateUrl: './completed-request.component.html',
     styleUrls: ['./completed-request.component.css']
 })
 export class CompletedRequestComponent implements OnInit {
-    constructor () { }
+    constructor (private completedRequestService: CompletedRequestService) { }
 
     elementId: string
     requestStatusCode: string
@@ -17,5 +19,9 @@ export class CompletedRequestComponent implements OnInit {
 
     ngOnInit (): void {
         
+    }
+
+    insertRequestDataToForm (): void {
+        return this.completedRequestService.insertRequestDataToForm();
     }
 }
