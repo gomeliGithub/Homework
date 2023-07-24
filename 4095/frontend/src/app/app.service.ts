@@ -117,8 +117,19 @@ export class AppService {
         return { headers, parameters };
     }
 
-    createSaveRequest (viewRef: ViewContainerRef, componentRef: ComponentRef<CompletedRequestComponent>, createOptions: ICompletedRequestCreateOptions) {
+    createSaveRequest (viewRef: ViewContainerRef, componentRef: ComponentRef<CompletedRequestComponent>, createOptions: ICompletedRequestCreateOptions, savedRequests: {}): {} {
         componentRef = this.createCompletedRequestInstance(viewRef, createOptions);
+
+        const savedRequestsCount = Object.keys(savedRequests).length;
+        const updatedSavedRequests = savedRequests;
+
+        updatedSavedRequests[`requestN${savedRequestsCount + 1}`]['statusCode'] = response.status;
+        updatedSavedRequests[`requestN${savedRequestsCount + 1}`]['method'] = fetchOptions.method;
+        updatedSavedRequests[`requestN${savedRequestsCount + 1}`]['url'] = requestData.requestUrl;
+        updatedSavedRequests[`requestN${savedRequestsCount + 1}`]['headers'] = fetchOptions.headers;
+        updatedSavedRequests[`requestN${savedRequestsCount + 1}`]['paramaters'] = fetchOptions.body;
+
+        return updatedSavedRequests;
     }
 
     createCompletedRequestInstance (viewRef: ViewContainerRef, createOptions: ICompletedRequestCreateOptions): ComponentRef<CompletedRequestComponent> {
