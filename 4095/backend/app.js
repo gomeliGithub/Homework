@@ -17,6 +17,8 @@ webserver.use(cors({
 const port = 7980;
 const logFN = path.join(__dirname, '_server.log');
 
+const savedRequests = {};
+
 function logLineSync(logFilePath,logLine) {
     const logDT = new Date();
     let time = logDT.toLocaleDateString() + " " + logDT.toLocaleTimeString();
@@ -52,6 +54,14 @@ webserver.post('/sendRequest', async (req, res) => {
         for await (const chunk of response.body) {
             body = JSON.parse(chunk.toString());
         }
+
+        const savedRequestsCount = Object.keys(savedRequests).length;
+
+        savedRequests[`requestN${savedRequestsCount + 1}`]['statusCode'] = response.status;
+        savedRequests[`requestN${savedRequestsCount + 1}`]['method'] = fetchOptions.method;
+        savedRequests[`requestN${savedRequestsCount + 1}`]['url'] = requestData.requestUrl;
+        savedRequests[`requestN${savedRequestsCount + 1}`]['headers'] = fetchOptions.headers;
+        savedRequests[`requestN${savedRequestsCount + 1}`]['paramaters'] = fetchOptions.body;
 
         res.send({
             statusCode: response.status,
