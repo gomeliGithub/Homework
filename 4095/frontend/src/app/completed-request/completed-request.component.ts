@@ -1,6 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 
 import { CompletedRequestService } from './completed-request.service';
+
+import { ISavedRequest } from '../@types/global';
 
 @Component({
     selector: 'app-completed-request',
@@ -17,11 +19,13 @@ export class CompletedRequestComponent implements OnInit {
     requestHeaders: object[]
     requestParameters: object[]
 
+    savedRequests: ISavedRequest[]
+
     ngOnInit (): void {
         
     }
 
-    insertRequestDataToForm (): void {
-        return this.completedRequestService.insertRequestDataToForm();
+    insertRequestDataToForm (): void { debugger;
+        return this.completedRequestService.insertRequestDataToForm(this.savedRequests, this.elementId);
     }
 }

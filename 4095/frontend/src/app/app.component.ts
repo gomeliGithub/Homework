@@ -31,7 +31,7 @@ export class AppComponent implements OnInit {
     methods = [ 'GET', 'POST' ]
     headers = [ 'Accept', 'Accept-Language', 'Content-Language', 'Content-Type' ]
 
-    savedRequests: ISavedRequest[]
+    savedRequests: ISavedRequest[] = []
 
     constructor (private readonly appService: AppService) { }
 
@@ -67,7 +67,8 @@ export class AppComponent implements OnInit {
                 requestMethod: method,
                 requestURL: url,
                 requestHeaders: headers,
-                requestParameters: parameters
+                requestParameters: parameters,
+                updatedSavedRequests: []
             }, this.savedRequests);
 
             this.savedRequests = updatedSavedRequests;

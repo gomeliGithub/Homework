@@ -10,6 +10,7 @@ export interface ICompletedRequestCreateOptions {
     requestURL: string;
     requestHeaders: object[];
     requestParameters: object[];
+    updatedSavedRequests: ISavedRequest[];
 }
 
 export interface ISavedRequest {

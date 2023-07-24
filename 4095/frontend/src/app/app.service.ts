@@ -138,6 +138,7 @@ export class AppService {
         }
 
         createOptions.elementId = newSavedRequest.elementId;
+        createOptions.updatedSavedRequests = updatedSavedRequests;
 
         componentRef = this.createCompletedRequestInstance(viewRef, createOptions);
 
@@ -155,6 +156,8 @@ export class AppService {
         completedRequestComponent.instance.requestURL = createOptions.requestURL;
         completedRequestComponent.instance.requestHeaders = createOptions.requestHeaders;
         completedRequestComponent.instance.requestParameters = createOptions.requestParameters;
+        
+        completedRequestComponent.instance.savedRequests = createOptions.updatedSavedRequests;
 
         return completedRequestComponent;
     }
