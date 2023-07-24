@@ -71,6 +71,8 @@ export class AppComponent implements OnInit {
                 updatedSavedRequests: []
             }, this.savedRequests);
 
+            const contentType: string = this.completedResponseHeaders.find((headerArr => headerArr[0] === 'content-type')) as unknown as string;
+
             this.savedRequests = updatedSavedRequests;
 
             this.completedRequestMethod = method;
@@ -78,7 +80,10 @@ export class AppComponent implements OnInit {
 
             this.completedResponseStatusCode = data['statusCode' as keyof Object] as unknown as string;
             this.completedResponseHeaders = Object.entries(data['headers' as keyof Object]);
-            this.completedResponseBody = JSON.stringify(data['body' as keyof Object]);
+
+            if (contentType === 'application/json') this.completedResponseBody = JSON.stringify(data['body' as keyof Object]);
+            if (contentType === ('text/html' || 'text/xml')) this.completedResponseBody = data['body' as keyof Object] as unknown as string;
+            // if (contentType === 'blob')
 
             this.requestCompleted = true;
         });

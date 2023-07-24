@@ -48,19 +48,23 @@ webserver.post('/sendRequest', async (req, res) => {
 
     const response = await fetch(requestData.requestUrl, fetchOptions);
 
-    try {
-        for await (const chunk of response.body) {
-            body = JSON.parse(chunk.toString());
-        }
+    const responseHeaders = response.headers.raw();
 
-        res.send({
-            statusCode: response.status,
-            headers: response.headers.raw(),
-            body: body
-        });
-    } catch (err) {
-        res.status(500).end();
-    }
+    if (responseHeaders['content-type'][0] === 'application/json') {
+        try {
+            for await (const chunk of response.body) {
+                body = JSON.parse(chunk.toString());
+            }
+        } catch (err) {
+            res.status(500).end();
+        }
+    } else res.send(response.body);
+
+    res.send({
+        statusCode: response.status,
+        headers: response.headers.raw(),
+        body: body
+    });
 });
 
 function serializeData (data) {
