@@ -5,6 +5,8 @@ import { AppService } from './app.service';
 
 import { CompletedRequestComponent } from './completed-request/completed-request.component';
 
+import { ISavedRequest } from './@types/global';
+
 @Component({
     selector: 'app-root',
     templateUrl: './app.component.html',
@@ -28,6 +30,8 @@ export class AppComponent implements OnInit {
 
     methods = [ 'GET', 'POST' ]
     headers = [ 'Accept', 'Accept-Language', 'Content-Language', 'Content-Type' ]
+
+    savedRequests: ISavedRequest[]
 
     constructor (private readonly appService: AppService) { }
 
@@ -57,11 +61,8 @@ export class AppComponent implements OnInit {
         this.requestSended = true;
 
         this.appService.sendRequest(method, url, headers, parameters).subscribe(data => {
-            // this.appService.saveRequest(method, url, data['statusCode' as keyof Object].toString());
-
-
-
             const updatedSavedRequests = this.appService.createSaveRequest(this.completedRequestViewRef, this.completedRequestComponentRef, {
+                elementId: '',
                 requestStatusCode: data['statusCode' as keyof Object] as unknown as number,
                 requestMethod: method,
                 requestURL: url,
@@ -69,10 +70,7 @@ export class AppComponent implements OnInit {
                 requestParameters: parameters
             }, this.savedRequests);
 
-          
-
-
-
+            this.savedRequests = updatedSavedRequests;
 
             this.completedRequestMethod = method;
             this.completedRequestUrl = url;

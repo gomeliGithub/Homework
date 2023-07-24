@@ -6,7 +6,7 @@ import { CompletedRequestComponent } from './completed-request/completed-request
 
 import { environment } from '../environments/environment';
 
-import { ICompletedRequestCreateOptions, IRequestParametersHeaders } from './@types/global';
+import { ICompletedRequestCreateOptions, IRequestParametersHeaders, ISavedRequest } from './@types/global';
 
 @Injectable({
     providedIn: 'root'
@@ -117,26 +117,39 @@ export class AppService {
         return { headers, parameters };
     }
 
-    createSaveRequest (viewRef: ViewContainerRef, componentRef: ComponentRef<CompletedRequestComponent>, createOptions: ICompletedRequestCreateOptions, savedRequests: {}): {} {
+    createSaveRequest (viewRef: ViewContainerRef, componentRef: ComponentRef<CompletedRequestComponent>, createOptions: ICompletedRequestCreateOptions, savedRequests: ISavedRequest[]): ISavedRequest[] {
+        const savedRequestsCount: number = savedRequests.length;
+        const updatedSavedRequests: ISavedRequest[] = savedRequests;
+
+        if (savedRequestsCount > 8) {
+            document.getElementById('completedRequestsContainer')?.children[0].remove();
+            updatedSavedRequests.shift();
+        }
+
+        const updatedSavedRequestsCount: number = updatedSavedRequests.length;
+
+        const newSavedRequest: ISavedRequest = {
+            elementId: `savedRequestN${updatedSavedRequestsCount}`,
+            statusCode: createOptions.requestStatusCode,
+            method: createOptions.requestMethod,
+            url: createOptions.requestURL,
+            headers: createOptions.requestHeaders,
+            parameters: createOptions.requestParameters
+        }
+
+        createOptions.elementId = newSavedRequest.elementId;
+
         componentRef = this.createCompletedRequestInstance(viewRef, createOptions);
 
-        const savedRequestsCount = Object.keys(savedRequests).length;
-        const updatedSavedRequests = savedRequests;
-
-        updatedSavedRequests[`requestN${savedRequestsCount + 1}`]['statusCode'] = response.status;
-        updatedSavedRequests[`requestN${savedRequestsCount + 1}`]['method'] = fetchOptions.method;
-        updatedSavedRequests[`requestN${savedRequestsCount + 1}`]['url'] = requestData.requestUrl;
-        updatedSavedRequests[`requestN${savedRequestsCount + 1}`]['headers'] = fetchOptions.headers;
-        updatedSavedRequests[`requestN${savedRequestsCount + 1}`]['paramaters'] = fetchOptions.body;
+        updatedSavedRequests.push(newSavedRequest);
 
         return updatedSavedRequests;
     }
 
     createCompletedRequestInstance (viewRef: ViewContainerRef, createOptions: ICompletedRequestCreateOptions): ComponentRef<CompletedRequestComponent> {
-        // viewRef.clear();
-
         const completedRequestComponent = viewRef.createComponent(CompletedRequestComponent);
 
+        completedRequestComponent.instance.elementId = createOptions.elementId;
         completedRequestComponent.instance.requestStatusCode = createOptions.requestStatusCode.toString().slice(0, 1);
         completedRequestComponent.instance.requestMethod = createOptions.requestMethod;
         completedRequestComponent.instance.requestURL = createOptions.requestURL;
@@ -144,23 +157,5 @@ export class AppService {
         completedRequestComponent.instance.requestParameters = createOptions.requestParameters;
 
         return completedRequestComponent;
-    }
-
-    saveRequest (requestMethod: string, requestUrl: string, statusCode: string): void {
-        const completedRequestsContainer: HTMLDivElement = document.getElementById('completedRequestsContainer') as HTMLDivElement;
-        
-        const spanContainer: HTMLDivElement = document.createElement('div');
-        const span: HTMLSpanElement = document.createElement('span');
-        const span2: HTMLSpanElement = document.createElement('span');
-
-        spanContainer.className = `badge text-bg-primary fs-6 ${statusCode.startsWith('4') || statusCode.startsWith('5') ? 'bg-danger' : ''} mb-2`;
-
-        span.className = "d-block mb-1";
-        span.textContent = `Метод: ${requestMethod}`;
-        span2.textContent = requestUrl;
-
-        spanContainer.append(span, span2);
-
-        completedRequestsContainer.append(spanContainer);
     }
 }
