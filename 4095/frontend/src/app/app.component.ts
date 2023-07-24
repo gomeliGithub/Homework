@@ -61,13 +61,15 @@ export class AppComponent implements OnInit {
 
 
 
-            this.appService.createSaveRequest(this.completedRequestViewRef, this.completedRequestComponentRef, {
+            const updatedSavedRequests = this.appService.createSaveRequest(this.completedRequestViewRef, this.completedRequestComponentRef, {
                 requestStatusCode: data['statusCode' as keyof Object] as unknown as number,
                 requestMethod: method,
                 requestURL: url,
                 requestHeaders: headers,
                 requestParameters: parameters
-            });
+            }, this.savedRequests);
+
+          
 
 
 
