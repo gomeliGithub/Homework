@@ -21,14 +21,14 @@ export async function sendRequest (requestBody, res) {
         headers: headers
     }
 
-    const regex = new RegExp('^(?:[a-z+]+:)?//', 'i');
+    const regexURLAbsoluteIs = new RegExp('^(?:[a-z+]+:)?//', 'i');
 
     if (fetchOptions.method !== "GET") fetchOptions.body = parameters;
 
     let body = {};
     let response = {};
 
-    if (!regex.test(requestData.requestUrl) || (fetchOptions.method !== "GET" && fetchOptions.method !== "POST")) {
+    if (!regexURLAbsoluteIs.test(requestData.requestUrl) || (fetchOptions.method !== "GET" && fetchOptions.method !== "POST")) {
         res.status(400).end();
         return;
     }

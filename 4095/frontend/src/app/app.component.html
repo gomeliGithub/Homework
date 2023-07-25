@@ -61,7 +61,7 @@
                     <p *ngFor="let header of completedResponseHeaders"> - {{header[0]}}: {{header[1]}}</p>
                 </div>
             </div>
-            <div *ngIf="!requestCompleted && requestSended" class="text-center text-danger p-4">
+            <div *ngIf="!requestCompleted  && requestSended" class="text-center text-danger p-4">
                 <span>Не валидные данные запроса</span>
             </div>
         </form>
