@@ -1,4 +1,5 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, HostListener } from '@angular/core';
+import { FormGroup } from '@angular/forms';
 
 import { CompletedRequestService } from './completed-request.service';
 
@@ -9,7 +10,7 @@ import { ISavedRequest } from '../@types/global';
     templateUrl: './completed-request.component.html',
     styleUrls: ['./completed-request.component.css']
 })
-export class CompletedRequestComponent implements OnInit {
+export class CompletedRequestComponent {
     constructor (private completedRequestService: CompletedRequestService) { }
 
     elementId: string
@@ -20,12 +21,10 @@ export class CompletedRequestComponent implements OnInit {
     requestParameters: object[]
 
     savedRequests: ISavedRequest[]
+    headers: string[]
+    createRequestForm: FormGroup<any>
 
-    ngOnInit (): void {
-        
-    }
-
-    insertRequestDataToForm (): void { debugger;
-        return this.completedRequestService.insertRequestDataToForm(this.savedRequests, this.elementId);
+    @HostListener("click") onClick() {
+        return this.completedRequestService.insertRequestDataToForm(this.savedRequests, this.headers, this.elementId, this.createRequestForm);
     }
 }

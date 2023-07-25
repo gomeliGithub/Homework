@@ -1,5 +1,6 @@
 import { ComponentRef, Injectable, ViewContainerRef } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { FormGroup } from '@angular/forms';
 import { Observable } from 'rxjs';
 
 import { CompletedRequestComponent } from './completed-request/completed-request.component';
@@ -25,27 +26,30 @@ export class AppService {
         });
     }
 
-    addControlInputs (headers: string[], formGroupType: 'headers' | 'parameters'): void { // ssdsd
-        const formControlsContainer: HTMLDivElement = document.getElementById(`${formGroupType}Container`) as HTMLDivElement;
+    addControlInputs (headers: string[], formControlType: 'headers' | 'parameters', name?: string, value?: string): void {
+        const formControlsContainer: HTMLDivElement = document.getElementById(`${formControlType}Container`) as HTMLDivElement;
 
         if (formControlsContainer.children.length > 8) Array.from(formControlsContainer.children).forEach(item => item.remove());
 
         const formControlTypeContainer: HTMLDivElement = document.createElement('div');
 
-        const formControlNameInput: HTMLInputElement | HTMLSelectElement = formGroupType !== 'headers' ? document.createElement('input') : this.createHeadersSelect(headers);
+        const formControlNameInput: HTMLInputElement | HTMLSelectElement = formControlType !== 'headers' ? document.createElement('input') : this.createHeadersSelect(headers);
 
         const formControlContainer = document.createElement('div');
         const formControlValueInput: HTMLInputElement = document.createElement('input');
         const deleteButton: HTMLButtonElement = document.createElement('button');
 
-        formControlTypeContainer.className = `d-flex flex-row ${formGroupType} mb-2`;
+        formControlTypeContainer.className = `d-flex flex-row ${formControlType} mb-2`;
 
-        if (formGroupType !== 'headers') {
+        if (formControlType !== 'headers') {
             formControlNameInput.classList.add('form-control');
         }
 
-        formControlNameInput.classList.add(`${formGroupType}Name`, 'w-25');
-        formControlValueInput.className = `form-control ${formGroupType}Value`;
+        if (name) formControlNameInput.value = name;
+        if (value) formControlValueInput.value = value;
+
+        formControlNameInput.classList.add(`${formControlType}Name`, 'w-25');
+        formControlValueInput.className = `form-control ${formControlType}Value`;
 
         deleteButton.className = "btn btn-danger ms-2";
         deleteButton.textContent = "Удалить";
@@ -98,14 +102,14 @@ export class AppService {
 
         const headers: IRequestParametersHeaders[] = headersDataInputs.map(headerDataInput => {
             const name: string = headerDataInput.children[0] ? headerDataInput.children[0]['value' as keyof Element] as string : "";
-            const value: string = headerDataInput.children[1] ? headerDataInput.children[1]['value' as keyof Element] as string : "";
+            const value: string = headerDataInput.children[1] ? headerDataInput.children[1].children[0]['value' as keyof Element] as string : "";
 
             return { name, value };
         });
 
         const parameters: IRequestParametersHeaders[] = parametersDataInputs.map(parameterDataInput => {
             const name: string = parameterDataInput.children[0] ? parameterDataInput.children[0]['value' as keyof Element] as string : "";
-            const value: string = parameterDataInput.children[0] ? parameterDataInput.children[1]['value' as keyof Element] as string : "";
+            const value: string = parameterDataInput.children[0] ? parameterDataInput.children[1].children[0]['value' as keyof Element] as string : "";
 
             return { name, value };
         });
@@ -154,7 +158,14 @@ export class AppService {
         completedRequestComponent.instance.requestParameters = createOptions.requestParameters;
         
         completedRequestComponent.instance.savedRequests = createOptions.updatedSavedRequests;
+        completedRequestComponent.instance.headers = createOptions.headers;
+        completedRequestComponent.instance.createRequestForm = createOptions.createRequestForm;
 
         return completedRequestComponent;
+    }
+
+    reset (createRequestForm: FormGroup<any>): void {
+        createRequestForm.reset();
+        this.deleteControlInputs();
     }
 }

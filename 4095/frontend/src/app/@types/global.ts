@@ -1,3 +1,5 @@
+import { FormGroup } from "@angular/forms";
+
 export interface IRequestParametersHeaders {
     name: string;
     value: string;
@@ -11,6 +13,8 @@ export interface ICompletedRequestCreateOptions {
     requestHeaders: object[];
     requestParameters: object[];
     updatedSavedRequests: ISavedRequest[];
+    headers: string[];
+    createRequestForm: FormGroup<any>;
 }
 
 export interface ISavedRequest {

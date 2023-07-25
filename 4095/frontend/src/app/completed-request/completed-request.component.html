@@ -1,4 +1,4 @@
-<div class="badge text-bg-primary fs-6 mb-2 z-2 cursor-pointer" [ngClass]="{ 'bg-danger': requestStatusCode === ('4' || '5') }" id={{elementId}} (click)="insertRequestDataToForm">
+<button class="btn fs-6 mb-2" [ngClass]="{ 'btn-danger': requestStatusCode === ('4' || '5'), 'btn-primary': requestStatusCode === '2' }" id={{elementId}}>
     <span class="d-block mb-1">Метод: {{requestMethod}}</span>
     <span>{{requestURL}}</span>
-</div>
+</button>

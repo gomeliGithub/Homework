@@ -23,7 +23,14 @@ export async function sendRequest (requestBody, res) {
 
     const regexURLAbsoluteIs = new RegExp('^(?:[a-z+]+:)?//', 'i');
 
-    if (fetchOptions.method !== "GET") fetchOptions.body = parameters;
+    if (fetchOptions.method === "GET") {
+        if (parameters) try {
+            requestData.requestUrl = createGetUrlWithParams(requestData.requestUrl, parameters);
+        } catch {
+            res.status(400).end();
+            return;
+        }
+    } else fetchOptions.body = parameters;
 
     let body = {};
     let response = {};
@@ -67,4 +74,14 @@ function serializeData (data) {
     } catch {
         return null;
     }
+}
+
+function createGetUrlWithParams (url, parameters) {
+    const newGetUrlWithParams = new URL(url);
+
+    Object.keys(parameters).forEach(key => {
+        newGetUrlWithParams.searchParams.append(key, parameters[key]);
+    });
+
+    return newGetUrlWithParams.href;
 }

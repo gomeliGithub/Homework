@@ -12,7 +12,7 @@ import { ISavedRequest } from './@types/global';
     templateUrl: './app.component.html',
     styleUrls: ['./app.component.css']
 })
-export class AppComponent implements OnInit {
+export class AppComponent {
     createRequestForm : FormGroup = new FormGroup({
         "method": new FormControl("", Validators.required),
         "url": new FormControl("", Validators.required)
@@ -41,10 +41,6 @@ export class AppComponent implements OnInit {
     private completedRequestViewRef: ViewContainerRef;
     private completedRequestComponentRef: ComponentRef<CompletedRequestComponent>;
 
-    ngOnInit (): void {
-        
-    }
-
     addControlInputs (formGroupType: 'headers' | 'parameters'): void {
         return this.appService.addControlInputs(this.headers, formGroupType);
     }
@@ -69,7 +65,9 @@ export class AppComponent implements OnInit {
                 requestURL: url,
                 requestHeaders: headers,
                 requestParameters: parameters,
-                updatedSavedRequests: []
+                updatedSavedRequests: [],
+                headers: this.headers,
+                createRequestForm: this.createRequestForm
             }, this.savedRequests);
 
             this.savedRequests = updatedSavedRequests;
@@ -93,7 +91,6 @@ export class AppComponent implements OnInit {
     }
 
     reset (): void {
-        this.createRequestForm.reset();
-        this.deleteControlInputs();
+        return this.appService.reset(this.createRequestForm);
     }
 }
