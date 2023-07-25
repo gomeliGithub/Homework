@@ -12,8 +12,6 @@ const __dirname = dirname(__filename);
 
 const webserver = express();
 
-webserver.options('*', cors())
-
 webserver.use(cors({
     origin: 'http://178.172.195.18:7981' // 'http://localhost:4200'
 }));
