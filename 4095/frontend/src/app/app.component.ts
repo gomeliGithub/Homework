@@ -74,13 +74,15 @@ export class AppComponent implements OnInit {
 
             this.savedRequests = updatedSavedRequests;
 
-            this.completedResponseContentType = this.completedResponseHeaders.find((headerArr => headerArr[0] === 'content-type')) as unknown as string;
+            this.completedResponseStatusCode = data['statusCode' as keyof Object] as unknown as string;
+            this.completedResponseHeaders = Object.entries(data['headers' as keyof Object]);
+
+            const contentTypeId: number = this.completedResponseHeaders.findIndex((headerArr => headerArr[0] === 'content-type')) as unknown as number;
+
+            this.completedResponseContentType = this.completedResponseHeaders[contentTypeId][1][0];
 
             this.completedRequestMethod = method;
             this.completedRequestUrl = url;
-
-            this.completedResponseStatusCode = data['statusCode' as keyof Object] as unknown as string;
-            this.completedResponseHeaders = Object.entries(data['headers' as keyof Object]);
 
             if (this.completedResponseContentType === 'application/json') this.completedResponseBody = JSON.stringify(data['body' as keyof Object]);
             if (this.completedResponseContentType === ('text/plain' || 'text/html' || 'application/xml')) this.completedResponseBody = data['body' as keyof Object] as unknown as string;
