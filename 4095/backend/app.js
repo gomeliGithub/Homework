@@ -12,12 +12,15 @@ const __dirname = dirname(__filename);
 
 const webserver = express();
 
+webserver.options('*', cors())
+
+webserver.use(cors({
+    origin: 'http://178.172.195.18:7981' // 'http://localhost:4200'
+}));
+
 webserver.use(urlencoded({ extended: false }));
 webserver.use(json());
 
-webserver.use(cors({
-    origin: 'http://localhost:4200' // 'http://178.172.195.18:7981'
-}));
 
 const port = 7980;
 const logFN = join(__dirname, '_server.log');
