@@ -70,10 +70,6 @@ export class AppService {
 
             Array.from(controlsContainer).forEach(controlsContainer => controlsContainer.remove());
         }
-
-        const requestResponseContainer: HTMLDivElement = document.getElementById('requestResponse') as HTMLDivElement;
-
-        Array.from(requestResponseContainer.children).forEach(item => item.remove());
     }
 
     createHeadersSelect (headers: string[]): HTMLSelectElement {
