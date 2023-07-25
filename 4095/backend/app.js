@@ -35,7 +35,7 @@ function logLineSync(logFilePath,logLine) {
 }
 
 webserver.post('/sendRequest', async (req, res) => { 
-    const response = await sendRequest(req.body);
+    const response = await sendRequest(req.body, res);
 
     res.send(response);
 });

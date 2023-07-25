@@ -1,14 +1,20 @@
 import fetch from 'node-fetch';
 
-export async function sendRequest (requestBody) {
+export async function sendRequest (requestBody, res) {
     const requestData = requestBody;
 
-    if (!requestData.requestMethod || !requestData.requestUrl || !requestData.requestHeaders || !requestData.requestParameters) res.status(400).end();
+    if (!requestData.requestMethod || !requestData.requestUrl || !requestData.requestHeaders || !requestData.requestParameters) {
+        res.status(400).end();
+        return;
+    }
 
     const headers = serializeData(requestData.requestHeaders);
     const parameters = serializeData(requestData.requestParameters);
 
-    if (headers === null || parameters === null) res.status(400).end();
+    if (headers === null || parameters === null) {
+        res.status(400).end();
+        return;
+    }
 
     const fetchOptions = {
         method: requestData.requestMethod,
@@ -19,11 +25,20 @@ export async function sendRequest (requestBody) {
 
     if (fetchOptions.method !== "GET") fetchOptions.body = parameters;
 
-    let body = {}; 
+    let body = {};
+    let response = {};
 
-    if (!regex.test(requestData.requestUrl) || (fetchOptions.method !== "GET" && fetchOptions.method !== "POST")) res.status(400).end();
+    if (!regex.test(requestData.requestUrl) || (fetchOptions.method !== "GET" && fetchOptions.method !== "POST")) {
+        res.status(400).end();
+        return;
+    }
 
-    const response = await fetch(requestData.requestUrl, fetchOptions);
+    try {
+        response = await fetch(requestData.requestUrl, fetchOptions);
+    } catch {
+        res.status(400).end();
+        return;
+    }
 
     const responseHeaders = response.headers.raw();
 
