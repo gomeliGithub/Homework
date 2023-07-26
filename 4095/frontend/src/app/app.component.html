@@ -54,7 +54,7 @@
                 <div *ngIf="completedResponseBody" class="mb-3">
                     <span class="fw-bold">Тело ответа</span>
                     <p *ngIf="completedResponseContentType !== 'image/jpeg'" class="text-break">{{completedResponseBody}}</p>
-                    <img *ngIf="completedResponseContentType === 'image/jpeg'" src="data:image/png;base64,{{completedResponseBody}}">
+                    <img *ngIf="completedResponseContentType === 'image/jpeg'" src="data:image/png;base64,{{completedResponseBody}}" class="img-fluid">
                 </div>
                 <div class="">
                     <span class="fw-bold">Заголовки ответа</span>
