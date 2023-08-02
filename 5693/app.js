@@ -5,16 +5,33 @@ const path = require('path');
 const os = require('os');
 const zlib = require('zlib');
 
-function logLineSync (logFilePath, logLine) {
-    const logDT = new Date();
-    let time = logDT.toLocaleDateString() + " " + logDT.toLocaleTimeString();
-    let fullLogLine = time + " " + logLine;
-
-    console.log(fullLogLine);
-
-    const logFd = fs.openSync(logFilePath, 'a+');
-    fs.writeSync(logFd, fullLogLine + os.EOL);
-    fs.closeSync(logFd);
+function logLineAsync (logFilePath, logLine) {
+    return new Promise( (resolve,reject) => {
+        const logDT=new Date();
+        let time=logDT.toLocaleDateString() + " " + logDT.toLocaleTimeString();
+        let fullLogLine=time+" "+logLine;
+    
+        console.log(fullLogLine);
+    
+        fs.open(logFilePath, 'a+', (err,logFd) => {
+            if ( err ) 
+                reject(err);
+            else    
+                fs.write(logFd, fullLogLine + os.EOL, (err) => {
+                    if ( err )
+                        reject(err); 
+                    else    
+                        fs.close(logFd, (err) =>{
+                            if ( err )
+                                reject(err);
+                            else    
+                                resolve();
+                        });
+                });
+    
+        });
+            
+    });
 }
 
 const logFN = path.join(__dirname, '_app.log');
@@ -25,7 +42,7 @@ const rl = readline.createInterface({
     prompt: 'DIR_PATH> '
 });
 
-const compressPromiseCache = null;
+let compressPromiseCache = null;
 
 rl.prompt();
 
@@ -42,31 +59,51 @@ rl.on('line', async dirPath => {
         const originalFiles = files.filter(fileInfo => path.extname(fileInfo.name) !== '.gz');
         const compressedFiles = files.filter(fileInfo => path.extname(fileInfo.name) === '.gz');
 
-        for (const originalFileInfo of originalFiles) {
-            const originalFilePath = originalFileInfo.path;
+        try {
+            for (const originalFileInfo of originalFiles) {
+                const originalFilePath = originalFileInfo.path;
 
-            const compressedFileInfo = compressedFiles.find(fileInfo2 => `${originalFileInfo.name}.gz` === fileInfo2.name); 
+                const compressedFileInfo = compressedFiles.find(fileInfo2 => `${originalFileInfo.name}.gz` === fileInfo2.name); 
 
-            if (compressedFileInfo) {
-                const originalFileModificationDate = (await fsPromises.stat(originalFilePath)).mtime;
-                const compressedFileModificationDate = (await fsPromises.stat(compressedFileInfo.path)).mtime;
+                if (compressedFileInfo) {
+                    const originalFileModificationDate = (await fsPromises.stat(originalFilePath)).mtime;
+                    const compressedFileModificationDate = (await fsPromises.stat(compressedFileInfo.path)).mtime;
 
-                if (originalFileModificationDate.getTime() > compressedFileModificationDate.getTime()) {
-                    await fsPromises.rm(compressedFileInfo.path);
+                    if (originalFileModificationDate.getTime() > compressedFileModificationDate.getTime()) {
+                        await fsPromises.rm(compressedFileInfo.path);
 
-                    logLineSync(logFN, `Начата переархивация файла '${path.basename(originalFilePath)}'`);
+                        await logLineAsync(logFN, `Начата переархивация файла '${path.basename(originalFilePath)}'`);
 
-                    await compressFile(originalFilePath);
+                        const compressFilePromise = compressFile(originalFilePath);
 
-                    logLineSync(logFN, `Переархивация файла '${path.basename(originalFilePath)}' завершена`);
+                        compressPromiseCache = compressFilePromise;
+
+                        await compressFilePromise;
+
+                        compressPromiseCache = null;
+
+                        await logLineAsync(logFN, `Переархивация файла '${path.basename(originalFilePath)}' завершена`);
+                    }
+                } else {
+                    await logLineAsync(logFN, `Начата архивация файла '${path.basename(originalFilePath)}'`);
+
+                    const compressFilePromise = compressFile(originalFilePath);
+
+                    compressPromiseCache = compressFilePromise;
+
+                    await compressFilePromise;
+
+                    compressPromiseCache = null;
+
+                    await logLineAsync(logFN, `Архивация файла '${path.basename(originalFilePath)}' завершена`);
                 }
-            } else {
-                logLineSync(logFN, `Начата архивация файла '${path.basename(originalFilePath)}'`);
-
-                await compressFile(originalFilePath);
-
-                logLineSync(logFN, `Архивация файла '${path.basename(originalFilePath)}' завершена`);
             }
+        } catch {
+            compressPromiseCache = null;
+
+            await logLineAsync(logFN,`[${port}] ошибка при сжатии картинки ${fullFileName} - `+err);
+
+            rl.close();
         }
     } else {
         const compressPromise = compressPromiseCache;
@@ -91,11 +128,11 @@ async function readDir (dirPath, fullFilesArr) {
         if (statResult.isDirectory())  {
             const subFolderPath = fileFullPath;
 
-            logLineSync(logFN, `Начато сканирование папки <${path.basename(subFolderPath)}>`);
+            await logLineAsync(logFN, `Начато сканирование папки <${path.basename(subFolderPath)}>`);
 
             await readDir(subFolderPath, fullFilesArr);
 
-            logLineSync(logFN, `Сканирование папки <${path.basename(subFolderPath)}> завершено`);
+            await logLineAsync(logFN, `Сканирование папки <${path.basename(subFolderPath)}> завершено`);
         } else {
             const fileInfo = { name: fileName, path: fileFullPath };
 
