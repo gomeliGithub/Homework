@@ -65,7 +65,7 @@ rl.on('line', async dirPath => {
             for (const originalFileInfo of originalFiles) {
                 const originalFilePath = originalFileInfo.path;
 
-                const compressedFileInfo = compressedFiles.find(fileInfo2 => `${originalFileInfo.name}.gz` === fileInfo2.name); 
+                const compressedFileInfo = compressedFiles.find(compressedFile => `${originalFileInfo.name}.gz` === compressedFile.name); 
 
                 if (compressedFileInfo) {
                     const originalFileModificationDate = (await fsPromises.stat(originalFilePath)).mtime;
