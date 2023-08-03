@@ -101,7 +101,7 @@ rl.on('line', async dirPath => {
         } catch {
             compressPromiseCache = null;
 
-            await logLineAsync(logFN,`[${port}] ошибка при сжатии картинки ${fullFileName} - `+err);
+            await logLineAsync(logFN,`[${port}] произошла ошибка ${err}`);
 
             rl.close();
         }
