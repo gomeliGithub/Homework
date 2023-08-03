@@ -49,8 +49,8 @@ rl.prompt();
 rl.on('line', async dirPath => {
     try {
         await fsPromises.access(dirPath, fsPromises.constants.F_OK);
-    } catch {
-        await logLineAsync(logFN, "Ошибка при проверке начальной папки");
+    } catch (error) {
+        await logLineAsync(logFN, `Ошибка при проверке начальной папки: ${error}`);
         
         rl.close();
     }
