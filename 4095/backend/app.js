@@ -19,7 +19,6 @@ webserver.use(cors({
 webserver.use(urlencoded({ extended: false }));
 webserver.use(json());
 
-
 const port = 7980;
 const logFN = join(__dirname, '_server.log');
 

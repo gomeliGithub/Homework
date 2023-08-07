@@ -1,0 +1,12 @@
+<form [formGroup]="uploadFileForm" (ngSubmit)="uploadFile()">
+    <div class="form-group mb-3">
+        <label for="formFile" class="form-label">Выберите файл</label>
+        <input class="form-control" type="file" name="formFile" formControlName="formFile" (change)="fileChange($event)">
+        <div class="alert alert-danger" *ngIf="uploadFileForm.controls['formFile'].invalid && uploadFileForm.controls['formFile'].touched">
+            Не выбран файл
+        </div>
+    </div>
+    <div class="form-group mb-3">
+        <button type="submit" class="btn btn-primary" [disabled]="uploadFileForm.invalid">Отправить файл</button>
+    </div>
+</form>
