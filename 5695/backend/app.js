@@ -23,6 +23,8 @@ const resultFile = join(__dirname, 'download.jpeg');
 
 const server = new WebSocketServer({ port: port });
 
+const writeStream = fs.createWriteStream(resultFile);
+
 server.on('connection', async connection => { // connection - это сокет-соединение сервера с клиентом
 
     await logLineAsync(logFN, `[${port}] ` + "new connection established");
@@ -36,12 +38,16 @@ server.on('connection', async connection => { // connection - это сокет-
             });
         } else { // это сработает, когда клиент пришлёт какое-либо сообщение
             if (isBinary) {
-                console.log('сервером получено сообщение от клиента: '); //  + data
+                console.log('сервером получено сообщение от клиента: ');
+
+                writeStream.write(data);
 
 
 
+                
 
-                const buffer = Buffer.from(data, 'base64')
+
+                /*const buffer = Buffer.from(data, 'base64')
                 const readable = new Readable()
                 readable._read = () => {} // _read is required but you can noop it
                 readable.push(buffer)
@@ -49,7 +55,7 @@ server.on('connection', async connection => { // connection - это сокет-
 
                 readable.on('data', chunk => {
                     console.log(chunk.length);
-                });
+                });*/
 
 
                 

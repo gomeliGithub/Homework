@@ -57,11 +57,11 @@ export class AppComponent implements OnInit {
         }*/
 
         reader.onload = event => {
-            console.log("The file has been transferred.");
-        }
+            const result = event.target?.result as ArrayBuffer;
 
-        reader.onprogress = event => {
-            this.webSocketService.send(event.loaded);
+            for (let i = 0; i <= result.byteLength; i += 2000) {
+                this.webSocketService.send(result.slice(i !== 0 ? i - 2000 : i, i));
+            }
 
             console.log("The file has been transferred.");
         }
