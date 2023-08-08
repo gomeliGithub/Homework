@@ -42,7 +42,7 @@ export class AppComponent implements OnInit {
 
         let rawData: string | ArrayBuffer;
 
-        reader.onloadend = () => {
+        /*reader.onloadend = () => {
             
         }
 
@@ -52,6 +52,16 @@ export class AppComponent implements OnInit {
             rawData = eventTargetResult;
 
             this.webSocketService.send(rawData);
+
+            console.log("The file has been transferred.");
+        }*/
+
+        reader.onload = event => {
+            console.log("The file has been transferred.");
+        }
+
+        reader.onprogress = event => {
+            this.webSocketService.send(event.loaded);
 
             console.log("The file has been transferred.");
         }
