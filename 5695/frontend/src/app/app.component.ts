@@ -42,6 +42,14 @@ export class AppComponent implements OnInit {
             const sliceFilePart = this.formFile.slice(i, 100000);
         }
 
+        const int8Array = new Int8Array(fileReader.result);
+
+        const data = [];
+
+        int8Array.forEach((item) => {
+            data.push(item);
+        });
+
 
 
         
