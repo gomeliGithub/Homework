@@ -38,6 +38,13 @@ export class AppComponent implements OnInit {
     }
 
     public uploadFile (): void {
+        for (let i = 0; i <= this.formFile.size; i += 100000) {
+            const sliceFilePart = this.formFile.slice(i, 100000);
+        }
+
+
+
+        
         const reader = new FileReader();
 
         let rawData: string | ArrayBuffer;
