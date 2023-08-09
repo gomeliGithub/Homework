@@ -42,14 +42,6 @@ export class AppComponent implements OnInit {
             const sliceFilePart = this.formFile.slice(i, 100000);
         }
 
-        const int8Array = new Int8Array(fileReader.result);
-
-        const data = [];
-
-        int8Array.forEach((item) => {
-            data.push(item);
-        });
-
 
 
         
@@ -72,13 +64,13 @@ export class AppComponent implements OnInit {
         }*/
 
         reader.onload = event => {
-            const result = event.target?.result as ArrayBuffer;
+            const int8Array = new Int8Array(fileReader.result);
 
-            for (let i = 0; i <= result.byteLength; i += 2000) {
-                this.webSocketService.send(result.slice(i !== 0 ? i - 2000 : i, i));
-            }
+            const data = [];
 
-            console.log("The file has been transferred.");
+            int8Array.forEach((item) => {
+                 data.push(item);
+            });
         }
 
         reader.readAsArrayBuffer(this.formFile);
