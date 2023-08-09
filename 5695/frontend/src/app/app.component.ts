@@ -71,8 +71,17 @@ export class AppComponent implements OnInit {
             int8Array.forEach((item) => {
                  data.push(item);
             });
+
+            const payload = {
+                name: file.name,
+                type: file.type,
+                size: file.size,
+                data
+            };
+
+            this.webSocketService.send(JSON.stringify(payload));
         }
 
-        reader.readAsArrayBuffer(this.formFile);
+        reader.readAsArrayBuffer(sliceFilePart);
     }
 }
