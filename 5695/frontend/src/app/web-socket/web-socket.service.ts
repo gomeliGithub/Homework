@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 
-import { IWSMessage } from '../../@types/global';
+import { IFileData, IWSMessage } from '../../@types/global';
 
 @Injectable({
     providedIn: 'root'
@@ -14,6 +14,11 @@ export class WebSocketService {
         this.send('KEEP_ME_ALIVE'); // вот эту строчку бы зашарить с сервером!
     }, 5000);
 
+    private _slicedFormFile: Blob[];
+    private _formFileName: string;
+    private _formFileTotalSize: number;
+    private _currentChunkNumber: number;
+
     public on (host: string): void {
         this._connection = new WebSocket(host); // это сокет-соединение с сервером
 
@@ -22,7 +27,11 @@ export class WebSocketService {
         };
 
         this._connection.onmessage = (event: MessageEvent<IWSMessage>) => {
-            console.log('Клиентом получено сообщение от сервера: ' + event.data); // это сработает, когда сервер пришлёт какое-либо сообщение
+            const message: IWSMessage = JSON.parse(event.data as unknown as string);
+            
+            console.log('Клиентом получено сообщение от сервера: ' + message.event + message.data); // это сработает, когда сервер пришлёт какое-либо сообщение
+
+            if (message.event === 'uploadFile' && message.data === 'SUCCESS') this.sendFile(this._slicedFormFile, this._formFileName, this._formFileTotalSize, this._currentChunkNumber + 1);
         }
 
         this._connection.onerror = error => {
@@ -40,5 +49,35 @@ export class WebSocketService {
 
     public send (data: string | Blob | ArrayBuffer): void {
         (this._connection as WebSocket).send(data);
+    }
+
+    public sendFile (slicedFormFile: Blob[], formFileName: string, formFileTotalSize: number, chunkNumber: number): void {
+        if (!this._slicedFormFile) {
+            this._slicedFormFile = slicedFormFile;
+            this._formFileName = formFileName;
+            this._formFileTotalSize = formFileTotalSize;
+            this._currentChunkNumber = chunkNumber;
+        }
+
+        const reader = new FileReader();
+
+        reader.onload = event => {
+            const eventTargetResult: ArrayBuffer = (event.target as FileReader).result as ArrayBuffer;
+
+            const fileData: IFileData = {
+                eventType: 'uploadFile',
+                name: formFileName,
+                totalSize: formFileTotalSize,
+                chunkSize: this._slicedFormFile[chunkNumber].size,
+                chunkNumber: chunkNumber
+            }
+    
+            if (this._connection) {
+                this._connection.send(JSON.stringify(fileData));
+                this._connection.send(eventTargetResult);
+            }
+        }
+
+        reader.readAsArrayBuffer(this._slicedFormFile[chunkNumber]);
     }
 }

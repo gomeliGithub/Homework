@@ -23,24 +23,52 @@ const resultFile = join(__dirname, 'download.jpeg');
 
 const server = new WebSocketServer({ port: port });
 
-const writeStream = fs.createWriteStream(resultFile);
+server.on('connection', async connection => {
+    await logLineAsync(logFN, `[${port}] ` + "New connection established");
 
-server.on('connection', async connection => { // connection - это сокет-соединение сервера с клиентом
+    const commonMessage = {
+        event: '',
+        data: 'Hello from server to client!'
+    }
 
-    await logLineAsync(logFN, `[${port}] ` + "new connection established");
-
-    connection.send('hello from server to client!'); // это сообщение будет отослано сервером каждому присоединившемуся клиенту
+    connection.send(JSON.stringify(commonMessage));
     
     connection.on('message', (data, isBinary) => {
         if (data.toString() === "KEEP_ME_ALIVE" || data.toString() === "Hello from client to server!") {
             clients.forEach(client => {
                 if (client.connection === connection) client.lastkeepalive = Date.now();
             });
-        } else { // это сработает, когда клиент пришлёт какое-либо сообщение
+        } else {
             if (isBinary) {
-                console.log('сервером получено сообщение от клиента: ');
+                /*const writeStream = fs.createWriteStream(resultFile);
+                    writeStream.write(data);
 
-                writeStream.write(data);
+                    writeStream.on('finish', () => {
+                        const message = {
+                            event: 'uploadFile',
+                            data: 'SUCCESS'
+                        }
+
+                        connection.send(JSON.stringify(message));
+                    });*/
+
+                const readStream = fs.createReadStream(data);
+
+                readStream.on('data', chunk => {
+                    console.log(chunk.length);
+                });
+
+                readStream.on('error', error => {
+                    // console.log(error.name);
+                });
+            } else {
+                const clientMessage = JSON.parse(data.toString());
+
+                if (clientMessage.eventType === 'uploadFile') {
+                    console.log('сервером получено сообщение от клиента: ');
+
+
+                
 
 
 
@@ -88,6 +116,7 @@ server.on('connection', async connection => { // connection - это сокет-
                 writeStream.on('close', ()=>{
                     console.log("file has been written");
                 });*/
+                }
             }
         }
     });
@@ -106,8 +135,14 @@ setInterval(() => {
 
             logLineAsync(logFN, `[${port}] ` + "один из клиентов отключился, закрываем соединение с ним");
         }
-        else
-            client.connection.send('timer= ' + timer);
+        else {
+            const message = {
+                event: 'timer',
+                data: 'timer= ' + timer
+            }
+
+            client.connection.send(JSON.stringify(message));
+        }
     });
 
     clients = clients.filter(client => client.connection); // оставляем в clients только живые соединения
