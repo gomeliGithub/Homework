@@ -44,22 +44,10 @@ export class AppComponent implements OnInit {
             slicedFormFile.push(this.formFile.slice(i, i + 100000));
         }
 
-        // this.webSocketService.sendFile(slicedFormFile, this.formFile.name, this.formFile.size, 0);
+        this.webSocketService.sendFile(slicedFormFile, this.formFile.name, this.formFile.size, 0);
 
 
 
-        
-        const reader = new FileReader();
-
-        reader.onload = event => {
-            const eventTargetResult: ArrayBuffer = (event.target as FileReader).result as ArrayBuffer;
-
-            const int8Array = new Int8Array(eventTargetResult);
-
-            this.webSocketService.send(int8Array);
-        }
-
-        reader.readAsArrayBuffer(this.formFile);
 
         /*reader.onloadend = () => {
             

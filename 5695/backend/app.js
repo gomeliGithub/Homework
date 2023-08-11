@@ -51,16 +51,6 @@ server.on('connection', async connection => {
 
                         connection.send(JSON.stringify(message));
                     });*/
-
-                const readStream = fs.createReadStream(data);
-
-                readStream.on('data', chunk => {
-                    console.log(chunk.length);
-                });
-
-                readStream.on('error', error => {
-                    // console.log(error.name);
-                });
             } else {
                 const clientMessage = JSON.parse(data.toString());
 
