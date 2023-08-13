@@ -62,8 +62,6 @@ export class WebSocketService {
         const reader = new FileReader();
 
         reader.onload = event => {
-            const eventTargetResult: ArrayBuffer = (event.target as FileReader).result as ArrayBuffer;
-
             const fileData: IFileData = {
                 eventType: 'uploadFile',
                 name: formFileName,
@@ -72,10 +70,6 @@ export class WebSocketService {
                 chunkNumber: chunkNumber
             }
     
-            if (this._connection) {
-                this._connection.send(JSON.stringify(fileData));
-                this._connection.send(eventTargetResult);
-            }
         }
 
         reader.readAsArrayBuffer(this._slicedFormFile[chunkNumber]);

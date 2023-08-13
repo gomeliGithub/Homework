@@ -5,8 +5,6 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import cors from 'cors';
 
-import { Readable } from 'stream'
-
 import logLineAsync from './utils/logLineAsync.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -19,18 +17,14 @@ let clients = [];
 
 let timer = 0;
 
-const resultFile = join(__dirname, 'download.jpeg');
-
 const server = new WebSocketServer({ port: port });
 
 server.on('connection', async connection => {
     await logLineAsync(logFN, `[${port}] ` + "New connection established");
 
-    const _id = crypto.randomBytes(20);
-
     const commonMessage = {
         event: '',
-        data: _id
+        data: 'hello from server to client! timer=' + timer
     }
 
     connection.send(JSON.stringify(commonMessage));
@@ -42,8 +36,16 @@ server.on('connection', async connection => {
             });
         } else {
             if (isBinary) {
-                const currentClient = client.find(client => client._id === clientMessage._id); /////////////
+                const splitedData = data.toString().split('\r\n\r\n', 2);
+
+                const fileMeta = JSON.parse(splitedData[0].substring(1));
+                const fileData = splitedData[1];
+
+                console.log(fileMeta.size);
+                console.log(fileData.length)
                 
+
+                /*
                 const writeStream = fs.createWriteStream(resultFile);
                     writeStream.write(data);
 
@@ -55,75 +57,12 @@ server.on('connection', async connection => {
 
                         connection.send(JSON.stringify(message));
                     });
-            } else {
-                const clientMessage = JSON.parse(data.toString());
-
-                if (clientMessage.eventType === 'uploadFile') {
-                    clients.forEach(client => {
-                        if (client._id === clientMessage._id) {
-                            client.uploadFileInProgress = true;
-                            client.fileName = clientMessage.fileName;
-                            client.totalFileSize = clientMessage.totalFileSize;
-                        }
-                    });
-
-                    
-
-
-                
-
-
-
-                
-
-
-                /*const buffer = Buffer.from(data, 'base64')
-                const readable = new Readable()
-                readable._read = () => {} // _read is required but you can noop it
-                readable.push(buffer)
-                readable.push(null)
-
-                readable.on('data', chunk => {
-                    console.log(chunk.length);
-                });*/
-
-
-                
-                
-                /*const readStream = fs.createReadStream(data);
-
-                readStream.on('data', chunk => {
-                    console.log(chunk.length); console.log("AAAAAA");
-                });
-
-                readStream.on('error', error => {
-                    // console.log(error.name);
-                });*/
-
-                /*const writeStream = fs.createWriteStream(resultFile);
-                // если файл уже есть, createWriteStream по умолчанию его перезаписывает (flags:'w'), поэтому удалять файл в начале и не пришлось
-        
-                data.readInt8.on('data', chunk => {
-                    console.log(chunk.length + ' downloaded...');  
-                    // с потоками можно не бояться делать много операций подряд, они не "перепутаются"
-                    writeStream.write(chunk);
-                });
-          
-                data.readInt8.on('end', () => {
-                    console.log("resource has been downloaded");
-
-                    writeStream.end();
-                });
-            
-                writeStream.on('close', ()=>{
-                    console.log("file has been written");
-                });*/
-                }
+                */
             }
         }
     });
 
-    clients.push( { connection: connection, _id: _id, lastkeepalive: Date.now() } );
+    clients.push( { connection: connection, lastkeepalive: Date.now() } );
 });
 
 setInterval(() => {
@@ -131,11 +70,11 @@ setInterval(() => {
 
     clients.forEach(client => {
         if ((Date.now() - client.lastkeepalive) > 12000 ) {
-            client.connection.terminate(); // если клиент уже давно не отчитывался что жив - закрываем соединение
+            client.connection.terminate();
 
             client.connection = null;
 
-            logLineAsync(logFN, `[${port}] ` + "один из клиентов отключился, закрываем соединение с ним");
+            logLineAsync(logFN, `[${port}] ` + "Один из клиентов отключился, закрываем соединение с ним");
         }
         else {
             const message = {
@@ -147,7 +86,7 @@ setInterval(() => {
         }
     });
 
-    clients = clients.filter(client => client.connection); // оставляем в clients только живые соединения
+    clients = clients.filter(client => client.connection);
 }, 3000);
 
 logLineAsync(logFN, "socket server running on port " + port);
