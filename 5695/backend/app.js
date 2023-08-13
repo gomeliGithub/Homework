@@ -26,9 +26,11 @@ const server = new WebSocketServer({ port: port });
 server.on('connection', async connection => {
     await logLineAsync(logFN, `[${port}] ` + "New connection established");
 
+    const _id = crypto.randomBytes(20);
+
     const commonMessage = {
         event: '',
-        data: 'Hello from server to client!'
+        data: _id
     }
 
     connection.send(JSON.stringify(commonMessage));
@@ -40,7 +42,9 @@ server.on('connection', async connection => {
             });
         } else {
             if (isBinary) {
-                /*const writeStream = fs.createWriteStream(resultFile);
+                const currentClient = client.find(client => client._id === clientMessage._id); /////////////
+                
+                const writeStream = fs.createWriteStream(resultFile);
                     writeStream.write(data);
 
                     writeStream.on('finish', () => {
@@ -50,12 +54,20 @@ server.on('connection', async connection => {
                         }
 
                         connection.send(JSON.stringify(message));
-                    });*/
+                    });
             } else {
                 const clientMessage = JSON.parse(data.toString());
 
                 if (clientMessage.eventType === 'uploadFile') {
-                    console.log('сервером получено сообщение от клиента: ');
+                    clients.forEach(client => {
+                        if (client._id === clientMessage._id) {
+                            client.uploadFileInProgress = true;
+                            client.fileName = clientMessage.fileName;
+                            client.totalFileSize = clientMessage.totalFileSize;
+                        }
+                    });
+
+                    
 
 
                 
@@ -111,7 +123,7 @@ server.on('connection', async connection => {
         }
     });
 
-    clients.push( { connection: connection, lastkeepalive: Date.now() } );
+    clients.push( { connection: connection, _id: _id, lastkeepalive: Date.now() } );
 });
 
 setInterval(() => {
