@@ -41,23 +41,46 @@ server.on('connection', async connection => {
                 const fileMeta = JSON.parse(splitedData[0].substring(1));
                 const fileData = splitedData[1];
 
+
+
+
                 console.log(fileMeta.size);
-                console.log(fileData.length)
+                console.log(fileData.length);
+                console.log(fileMeta.size - fileData.length);
+                console.log(fileMeta.name);
                 
 
-                /*
-                const writeStream = fs.createWriteStream(resultFile);
-                    writeStream.write(data);
 
-                    writeStream.on('finish', () => {
-                        const message = {
-                            event: 'uploadFile',
-                            data: 'SUCCESS'
-                        }
+                
+                const writeStream = fs.createWriteStream(join(__dirname, fileMeta.name), {
+                    // encoding: 'binary'
+                });
 
-                        connection.send(JSON.stringify(message));
-                    });
-                */
+                writeStream.write(fileData);
+                writeStream.end();
+
+                writeStream.on('finish', () => {
+                    console.log("FINISH");
+
+                    const message = {
+                        event: 'uploadFile',
+                        data: 'SUCCESS'
+                    }
+
+                    connection.send(JSON.stringify(message));
+                });
+
+                writeStream.on('open', error => {
+                    console.log("OPEN");
+                });
+
+                writeStream.on('close', () => {
+                    console.log("CLOSE");
+                });
+
+                writeStream.on('error', error => {
+                    console.log("ERROR");
+                });
             }
         }
     });

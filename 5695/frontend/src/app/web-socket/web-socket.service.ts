@@ -31,7 +31,7 @@ export class WebSocketService {
             
             console.log('Клиентом получено сообщение от сервера: ' + message.event + message.data); // это сработает, когда сервер пришлёт какое-либо сообщение
 
-            if (message.event === 'uploadFile' && message.data === 'SUCCESS') this.sendFile(this._slicedFormFile, this._formFileName, this._formFileTotalSize, this._currentChunkNumber + 1);
+            // if (message.event === 'uploadFile' && message.data === 'SUCCESS') this.sendFile(this._slicedFormFile, this._formFileName, this._formFileTotalSize, this._currentChunkNumber + 1);
         }
 
         this._connection.onerror = error => {
@@ -51,27 +51,16 @@ export class WebSocketService {
         (this._connection as WebSocket).send(data);
     }
 
-    public sendFile (slicedFormFile: Blob[], formFileName: string, formFileTotalSize: number, chunkNumber: number): void {
+    public sendFile (slicedFormFile: Blob, formFileName: string, formFileTotalSize: number, chunkNumber: number): void {
         if (!this._slicedFormFile) {
-            this._slicedFormFile = slicedFormFile;
-            this._formFileName = formFileName;
-            this._formFileTotalSize = formFileTotalSize;
-            this._currentChunkNumber = chunkNumber;
+            // this._slicedFormFile = slicedFormFile;
+            // this._formFileName = formFileName;
+            // this._formFileTotalSize = formFileTotalSize;
+            // this._currentChunkNumber = chunkNumber;
         }
 
-        const reader = new FileReader();
-
-        reader.onload = event => {
-            const fileData: IFileData = {
-                eventType: 'uploadFile',
-                name: formFileName,
-                totalSize: formFileTotalSize,
-                chunkSize: this._slicedFormFile[chunkNumber].size,
-                chunkNumber: chunkNumber
-            }
-    
-        }
-
-        reader.readAsArrayBuffer(this._slicedFormFile[chunkNumber]);
+        (this._connection as WebSocket).binaryType = "arraybuffer";
+        this.send(slicedFormFile);
+        (this._connection as WebSocket).binaryType = "blob";
     }
 }

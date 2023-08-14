@@ -50,10 +50,6 @@ export class AppComponent implements OnInit {
 
         const reader = new FileReader();
 
-        reader.onloadend = () => {
-            
-        }
-
         reader.onload = event => {
             const fileData: string | ArrayBuffer = (event.target as FileReader).result as string | ArrayBuffer;
 
@@ -79,25 +75,6 @@ export class AppComponent implements OnInit {
         
             this.webSocketService.send(sendData);
         }
-
-        /*reader.onload = event => { event.target?.result
-            const int8Array = new Int8Array(fileReader.result);
-
-            const data = [];
-
-            int8Array.forEach((item) => {
-                 data.push(item);
-            });
-
-            const payload = {
-                name: file.name,
-                type: file.type,
-                size: file.size,
-                data
-            };
-
-            this.webSocketService.send(JSON.stringify(payload));
-        }*/
 
         reader.readAsArrayBuffer(this.formFile);
     }
