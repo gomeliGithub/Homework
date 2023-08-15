@@ -50,7 +50,7 @@ server.on('connection', async connection => {
                 console.log(fileMeta.size);
                 console.log(fileData.length);
                 console.log(fileMeta.size - fileData.length);
-                console.log(fileMeta.name); s
+                console.log(fileMeta.name);
                 console.log("--------------------------------");
 
 
