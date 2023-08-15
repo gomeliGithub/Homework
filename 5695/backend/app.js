@@ -42,21 +42,23 @@ server.on('connection', async connection => {
                 const fileData = splitedData[1];
 
 
+                // console.log(Buffer.from(splitedData[1]));
 
 
+                console.log("--------------------------------");
+                console.log(data.length);
                 console.log(fileMeta.size);
                 console.log(fileData.length);
                 console.log(fileMeta.size - fileData.length);
-                console.log(fileMeta.name);
-                
+                console.log(fileMeta.name); s
+                console.log("--------------------------------");
 
 
                 
-                const writeStream = fs.createWriteStream(join(__dirname, fileMeta.name), {
-                    // encoding: 'binary'
-                });
+                const writeStream = fs.createWriteStream(join(__dirname, fileMeta.name));
 
                 writeStream.write(fileData);
+
                 writeStream.end();
 
                 writeStream.on('finish', () => {

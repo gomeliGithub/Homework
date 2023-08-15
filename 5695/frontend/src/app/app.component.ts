@@ -38,16 +38,17 @@ export class AppComponent implements OnInit {
     }
 
     public uploadFile (): void {
-        /*const slicedFormFile: Blob[] = [];
+        const slicedFormFile: Blob[] = [];
 
         for (let i = 0; i <= this.formFile.size; i += 100000) {
             slicedFormFile.push(this.formFile.slice(i, i + 100000));
         }
 
-        this.webSocketService.sendFile(slicedFormFile, this.formFile.name, this.formFile.size, 0);*/
 
+        this.readFile(this.formFile);
+    }
 
-
+    public readFile (fileChunk: Blob) {
         const reader = new FileReader();
 
         reader.onload = event => {
@@ -57,25 +58,12 @@ export class AppComponent implements OnInit {
                 lastModified : this.formFile.lastModified,
                 name         : this.formFile.name,
                 size         : this.formFile.size,
-                type         : this.formFile.type,
+                type         : this.formFile.type
             });
 
-            const enc  = new TextEncoder(); // always utf-8, Uint8Array()
-            const buf1 = enc.encode('!');
-            const buf2 = enc.encode(fileMetaJson);
-            const buf3 = enc.encode("\r\n\r\n");
-            const buf4 = fileData as ArrayBuffer;
-        
-            let sendData = new Uint8Array(buf1.byteLength + buf2.byteLength + buf3.byteLength + buf4.byteLength);
-
-            sendData.set(new Uint8Array(buf1), 0);
-            sendData.set(new Uint8Array(buf2), buf1.byteLength);
-            sendData.set(new Uint8Array(buf3), buf1.byteLength + buf2.byteLength);
-            sendData.set(new Uint8Array(buf4), buf1.byteLength + buf2.byteLength + buf3.byteLength);
-        
-            this.webSocketService.send(sendData);
+            this.webSocketService.sendFile(fileMetaJson, fileData as ArrayBuffer);
         }
 
-        reader.readAsArrayBuffer(this.formFile);
+        reader.readAsArrayBuffer(fileChunk);
     }
 }
