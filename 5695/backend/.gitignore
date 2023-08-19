@@ -4,6 +4,8 @@
 *.jpg
 *.jpeg
 *.png
+*.gif
+*.tiff
 
 # Compiled output
 /dist
