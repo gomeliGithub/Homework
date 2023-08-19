@@ -90,7 +90,7 @@ webserver.post('/uploadFile', async (req, res) => {
                 }
             });
 
-            clients = clients.filter((client => client._id !== clientId));
+            clients = clients.filter((client => client.connection));
         });
 
         clients.push({ connection: connection, _id: clientId, lastkeepalive: Date.now() });
