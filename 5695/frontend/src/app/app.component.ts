@@ -20,7 +20,8 @@ export class AppComponent implements OnInit {
     public formFile: File;
 
     public uploadFileForm: FormGroup = new FormGroup({   
-        "formFile": new FormControl("", Validators.required)
+        "formFile": new FormControl("", Validators.required),
+        "formFileComment": new FormControl("", Validators.required)
     });
 
     ngOnInit (): void {
@@ -38,14 +39,39 @@ export class AppComponent implements OnInit {
     }
 
     public uploadFile (): void {
-        const slicedFormFile: Blob[] = [];
+        /*const slicedFormFile: Blob[] = [];
 
         for (let i = 0; i <= this.formFile.size; i += 100000) {
             slicedFormFile.push(this.formFile.slice(i, i + 100000));
         }
 
 
-        this.readFile(this.formFile);
+        this.readFile(this.formFile);*/
+
+
+        const reader = new FileReader();
+
+        reader.onload = event => {
+            const fileData: ArrayBuffer = (event.target as FileReader).result as ArrayBuffer;
+
+            const slicedFileData: ArrayBuffer[] = [];
+
+            for (let i = 0; i <= fileData.byteLength; i += 100000) {
+                slicedFileData.push(fileData.slice(i, i + 100000));
+            } 
+
+            const fileMetaJson = JSON.stringify({
+                lastModified : this.formFile.lastModified,
+                name         : this.formFile.name,
+                size         : this.formFile.size,
+                type         : this.formFile.type,
+                comment      : this.uploadFileForm.value['formFileComment']
+            });
+
+            this.webSocketService.sendFileTEST(slicedFileData, 0, fileMetaJson);
+        }
+
+        reader.readAsArrayBuffer(this.formFile);
     }
 
     public readFile (fileChunk: Blob) {

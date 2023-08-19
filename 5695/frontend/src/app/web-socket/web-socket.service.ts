@@ -19,6 +19,10 @@ export class WebSocketService {
     private _formFileTotalSize: number;
     private _currentChunkNumber: number;
 
+
+
+    private _slicedFileData: ArrayBuffer[];
+
     public on (host: string): void {
         this._connection = new WebSocket(host); // это сокет-соединение с сервером
 
@@ -32,6 +36,11 @@ export class WebSocketService {
             console.log('Клиентом получено сообщение от сервера: ' + message.event + message.data); // это сработает, когда сервер пришлёт какое-либо сообщение
 
             // if (message.event === 'uploadFile' && message.data === 'SUCCESS') this.sendFile(this._slicedFormFile, this._formFileName, this._formFileTotalSize, this._currentChunkNumber + 1);
+        
+
+
+            if (message.data === 'SUCCESS') this.sendFileTEST(this._slicedFileData, this._currentChunkNumber += 1);
+        
         }
 
         this._connection.onerror = error => {
@@ -67,5 +76,14 @@ export class WebSocketService {
         sendData.set(new Uint8Array(buf4), buf1.byteLength + buf2.byteLength + buf3.byteLength);
     
         this.send(sendData);
+    }
+
+    public sendFileTEST (slicedFileData: ArrayBuffer[], chunkNumber: number, fileMeta?: string) {
+        this._slicedFileData = this._slicedFileData ?? slicedFileData;
+        this._currentChunkNumber = chunkNumber;
+        
+        if (this._currentChunkNumber === 0 && fileMeta) this.send(fileMeta);
+
+        this.send(slicedFileData[chunkNumber]);
     }
 }

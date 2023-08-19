@@ -30,19 +30,46 @@ server.on('connection', async connection => {
     connection.send(JSON.stringify(commonMessage));
     
     connection.on('message', (data, isBinary) => {
-        if (data.toString() === "KEEP_ME_ALIVE" || data.toString() === "Hello from client to server!") {
+        if (data.toString() === "KEEP_ME_ALIVE") {
             clients.forEach(client => {
                 if (client.connection === connection) client.lastkeepalive = Date.now();
             });
         } else {
             if (isBinary) {
+                const fileData = data;
+
+                console.log(fileData.length);
+
+                fs.appendFile(join(__dirname, 'download.jpeg'), fileData, () => {
+                    const message = {
+                        event: '',
+                        data: 'SUCCESS'
+                    }
+                
+                    connection.send(JSON.stringify(message));
+                });
+
+
+
+                // const writeStream = fs.createWriteStream(join(__dirname, 'download.jpeg'));
+
+                /*writeStream.write(fileData);
+
+                writeStream.on('drain', () => {
+                    const message = {
+                        event: '',
+                        data: 'SUCCESS'
+                    }
+                
+                    connection.send(JSON.stringify(message));
+                });*/
+
+                /*
                 const splitedData = data.toString().split('\r\n\r\n', 2);
 
                 const fileMeta = JSON.parse(splitedData[0].substring(1));
                 const fileData = splitedData[1];
 
-
-                // console.log(Buffer.from(splitedData[1]));
 
 
                 console.log("--------------------------------");
@@ -54,7 +81,8 @@ server.on('connection', async connection => {
                 console.log("--------------------------------");
 
 
-                
+                */
+                /*
                 const writeStream = fs.createWriteStream(join(__dirname, fileMeta.name));
 
                 writeStream.write(fileData);
@@ -83,7 +111,8 @@ server.on('connection', async connection => {
                 writeStream.on('error', error => {
                     console.log("ERROR");
                 });
-            }
+                */
+            } else console.log(data.toString());
         }
     });
 
