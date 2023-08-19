@@ -1,4 +1,5 @@
-import { WebSocketServer, createWebSocketStream } from 'ws';
+import express, { urlencoded, json } from 'express';
+import { WebSocketServer } from 'ws';
 import * as fs from 'fs';
 import * as fsPromises from 'fs/promises';
 import { join, dirname } from 'path';
@@ -10,12 +11,40 @@ import logLineAsync from './utils/logLineAsync.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+const webserver = express();
+
+webserver.use(cors({
+    origin: 'http://localhost:4200' // 'http://178.172.195.18:7981'
+}));
+
+webserver.use(json());
+
 const port = 7980;
 const logFN = join(__dirname, '_server.log');
 
 let clients = [];
 
 let timer = 0;
+
+webserver.post('/sendRequest', async (req, res) => { 
+    const response = await sendRequest(req.body, res);
+
+    res.send(response);
+});
+
+webserver.listen(port, () => {
+    logLineAsync(logFN, "Web server running on port " + port);
+});
+
+
+
+
+
+
+
+
+
+
 
 const server = new WebSocketServer({ port: port });
 
