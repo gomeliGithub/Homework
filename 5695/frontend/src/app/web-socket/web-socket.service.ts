@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
+import { FormGroup } from '@angular/forms';
 
-import { IFileData, IWSMessage } from '../../@types/global';
+import { IWSMessage } from '../../@types/global';
 
 @Injectable({
     providedIn: 'root'
@@ -11,36 +12,47 @@ export class WebSocketService {
     private _connection: WebSocket | null;
 
     private _keepAliveTimer = setInterval(() => {
-        this.send('KEEP_ME_ALIVE'); // вот эту строчку бы зашарить с сервером!
+        this.send('KEEP_ME_ALIVE');
     }, 5000);
 
-    private _slicedFormFile: Blob[];
-    private _formFileName: string;
-    private _formFileTotalSize: number;
     private _currentChunkNumber: number;
-
-
-
     private _slicedFileData: ArrayBuffer[];
 
-    public on (host: string): void {
-        this._connection = new WebSocket(host); // это сокет-соединение с сервером
+    private _progressElement: HTMLDivElement;
 
-        this._connection.onopen = (event) => {
-            this.send('Hello from client to server!'); // можно послать строку, Blob или ArrayBuffer
+    public on (host: string, uploadFileForm: FormGroup, slicedFileData: ArrayBuffer[]): void {
+        this._connection = new WebSocket(host);
+
+        this._connection.onopen = () => {
+            this._progressElement = document.getElementById('progressBar') as HTMLDivElement;
+
+            this.sendFile(slicedFileData, 0);
         };
 
         this._connection.onmessage = (event: MessageEvent<IWSMessage>) => {
             const message: IWSMessage = JSON.parse(event.data as unknown as string);
             
-            console.log('Клиентом получено сообщение от сервера: ' + message.event + message.data); // это сработает, когда сервер пришлёт какое-либо сообщение
+            console.log(`Клиентом получено сообщение от сервера: ${message.event} ----- ${message.text}`);
 
-            // if (message.event === 'uploadFile' && message.data === 'SUCCESS') this.sendFile(this._slicedFormFile, this._formFileName, this._formFileTotalSize, this._currentChunkNumber + 1);
-        
+            if (message.event === 'uploadFile') {
+                if (message.text === 'ERROR') {
+                    this._clearUploadFileData(uploadFileForm);
 
+                    this._changeProgressBar(message.percentUploaded, true);
 
-            if (message.data === 'SUCCESS') this.sendFileTEST(this._slicedFileData, this._currentChunkNumber += 1);
-        
+                    setTimeout(() => this._changeProgressBar(0), 2000);
+                } else if (message.text === 'FINISH') { console.log(message.percentUploaded);
+                    this._changeProgressBar(message.percentUploaded);
+
+                    this._clearUploadFileData(uploadFileForm);
+
+                    setTimeout(() => this._changeProgressBar(0), 1000);
+                } else if (message.text === 'SUCCESS') { console.log(message.percentUploaded);
+                    this._changeProgressBar(message.percentUploaded);
+
+                    this.sendFile(this._slicedFileData, this._currentChunkNumber += 1);
+                }
+            }
         }
 
         this._connection.onerror = error => {
@@ -57,33 +69,34 @@ export class WebSocketService {
     }
 
     public send (data: string | Blob | ArrayBuffer): void {
-        (this._connection as WebSocket).send(data);
+        if (this._connection) this._connection.send(data);
     }
 
-    public sendFile (fileMetaJson: string, fileData: ArrayBuffer): void {
-        const enc  = new TextEncoder(); // always utf-8, Uint8Array()
-
-        const buf1 = enc.encode('!');
-        const buf2 = enc.encode(fileMetaJson);
-        const buf3 = enc.encode("\r\n\r\n");
-        const buf4 = fileData;
-    
-        let sendData = new Uint8Array(buf1.byteLength + buf2.byteLength + buf3.byteLength + buf4.byteLength);
-
-        sendData.set(new Uint8Array(buf1), 0);
-        sendData.set(new Uint8Array(buf2), buf1.byteLength);
-        sendData.set(new Uint8Array(buf3), buf1.byteLength + buf2.byteLength);
-        sendData.set(new Uint8Array(buf4), buf1.byteLength + buf2.byteLength + buf3.byteLength);
-    
-        this.send(sendData);
-    }
-
-    public sendFileTEST (slicedFileData: ArrayBuffer[], chunkNumber: number, fileMeta?: string) {
-        this._slicedFileData = this._slicedFileData ?? slicedFileData;
+    public sendFile (slicedFileData: ArrayBuffer[], chunkNumber: number): void {
+        if (!this._slicedFileData || this._slicedFileData.length === 0) this._slicedFileData = slicedFileData;
         this._currentChunkNumber = chunkNumber;
-        
-        if (this._currentChunkNumber === 0 && fileMeta) this.send(fileMeta);
 
         this.send(slicedFileData[chunkNumber]);
+    }
+
+    private _changeProgressBar (percentUploaded: number, error = false): void {
+        this._progressElement.setAttribute('aria-valuenow', percentUploaded.toString());
+
+        const progressBarElement: HTMLDivElement = this._progressElement.children[0] as HTMLDivElement;
+
+        progressBarElement.style.width = `${percentUploaded}%`;
+        progressBarElement.textContent = `${percentUploaded}%`;
+
+        if (error) {
+            progressBarElement.classList.add('bg-danger');
+            progressBarElement.textContent = "Произошла ошибка при загрузке файла на сервер";
+        }
+    }
+
+    private _clearUploadFileData (uploadFileForm: FormGroup) {
+        uploadFileForm.reset();
+
+        this._slicedFileData = [];
+        this._currentChunkNumber = 0;
     }
 }
