@@ -2,6 +2,7 @@ import express, { json } from 'express';
 import http from 'http';
 import { WebSocketServer } from 'ws';
 import * as fs from 'fs';
+import * as fsPromises from 'fs/promises';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import cors from 'cors';
@@ -62,8 +63,8 @@ webserver.post('/uploadFile', async (req, res) => {
 
     const socketServer = new WebSocketServer({ port: port2 }); 
 
-    socketServer.on('connection', async connection => {
-        await logLineAsync(logFN, `[${port}] New connection established`);
+    socketServer.on('connection', connection => {
+        logLineAsync(logFN, `[${port}] New connection established`);
 
         console.log("-------------------------------------");
         console.log(clientId);
@@ -77,6 +78,8 @@ webserver.post('/uploadFile', async (req, res) => {
         const writeStream = fs.createWriteStream(join(__dirname, 'uploadedFiles', fileMeta.name));
 
         writeStream.on('error', async error => {
+            await fsPromises.unlink(join(__dirname, 'uploadedFiles', fileMeta.name));
+
             console.error(`Stream error: ${error}`);
 
             await logLineAsync(logFN, `[${port}] Stream error`);
@@ -132,6 +135,14 @@ webserver.post('/uploadFile', async (req, res) => {
                     });
                 }
             }
+        });
+
+        connection.on('close', async () => {
+            await fsPromises.unlink(join(__dirname, 'uploadedFiles', fileMeta.name));
+        });
+
+        connection.on('error', async () => {
+            await fsPromises.unlink(join(__dirname, 'uploadedFiles', fileMeta.name));
         });
 
         return;
