@@ -50,7 +50,7 @@ webserver.post('/uploadFile', async (req, res) => {
 
     res.send('START').end();
 
-    const socketServer = new WebSocket(`ws://localhost:${port2}/n1`); // const socketServer = new WebSocketServer({ port: port2, host: 'localhost' });
+    const socketServer = new WebSocket(`ws://localhost:${port2}/n1`); // const socketServer = new WebSocketServer({ port: port2, host: 'localhost' }); 
 
     socketServer.on('connection', connection => {
         logLineAsync(logFN, `[${port}] New connection established`);
@@ -94,8 +94,6 @@ webserver.post('/uploadFile', async (req, res) => {
             });
 
             clients = clients.filter((client => client._id !== clientId));
-
-            socketServer.close();
         });
 
         clients.push({ connection: connection, _id: clientId, lastkeepalive: Date.now() });
