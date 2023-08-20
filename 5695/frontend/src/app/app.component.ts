@@ -23,7 +23,7 @@ export class AppComponent {
 
     private _uploadStart: boolean;
 
-    public formFile: File;
+    private _formFile: File;
 
     public uploadFileForm: FormGroup = new FormGroup({   
         "formFile": new FormControl("", Validators.required),
@@ -37,15 +37,14 @@ export class AppComponent {
             return;
         }
 
-        this.formFile = fileList[0];
+        this._formFile = fileList[0];
     }
 
     public async uploadFile (): Promise<void> {
         const fileMetaJson: string = JSON.stringify({
-            name         : this.formFile.name,
-            size         : this.formFile.size,
-            type         : this.formFile.type,
-            uploadDate   : Date.now()
+            name         : this._formFile.name,
+            size         : this._formFile.size,
+            type         : this._formFile.type
         }); 
         
         this.http.post(`${this._webServerHost}/uploadFile`, { 
@@ -54,7 +53,7 @@ export class AppComponent {
             uploadFileComment: this.uploadFileForm.value['formFileComment'] as string
         }, { responseType: 'text' }).subscribe(result => {
             if (result === 'START') {
-                this.appService.uploadFile(this.formFile, this.uploadFileForm);
+                this.appService.uploadFile(this._formFile, this.uploadFileForm);
             }
         });
     }

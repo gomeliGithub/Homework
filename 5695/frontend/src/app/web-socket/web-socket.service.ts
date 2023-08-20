@@ -11,9 +11,7 @@ export class WebSocketService {
 
     private _connection: WebSocket | null;
 
-    private _keepAliveTimer = setInterval(() => {
-        this.send('KEEP_ME_ALIVE');
-    }, 5000);
+    private _keepAliveTimer: any;
 
     private _currentChunkNumber: number;
     private _slicedFileData: ArrayBuffer[];
@@ -22,6 +20,10 @@ export class WebSocketService {
 
     public on (host: string, uploadFileForm: FormGroup, slicedFileData: ArrayBuffer[]): void {
         this._connection = new WebSocket(host);
+
+        this._keepAliveTimer = setInterval(() => {
+            this.send('KEEP_ME_ALIVE');
+        }, 5000);
 
         this._connection.onopen = () => {
             this._progressElement = document.getElementById('progressBar') as HTMLDivElement;

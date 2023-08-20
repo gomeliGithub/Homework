@@ -1,6 +1,6 @@
 import express, { json } from 'express';
 import http from 'http';
-import { WebSocketServer, WebSocket } from 'ws';
+import { WebSocketServer } from 'ws';
 import * as fs from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -46,11 +46,21 @@ webserver.post('/uploadFile', async (req, res) => {
         return;
     }
 
+    let activeUploadsNumber = 0;
+
+    clients.forEach(client => !client.activeUpload ? activeUploadsNumber += 1 : null);
+
+    if (activeUploadsNumber > 3) {
+        res.send('PENDING').end();
+
+        return;
+    }
+
     let timer = 0;
 
     res.send('START').end();
 
-    const socketServer = new WebSocket(`ws://localhost:${port2}/n1`); // const socketServer = new WebSocketServer({ port: port2, host: 'localhost' }); 
+    const socketServer = new WebSocketServer({ port: port2 }); 
 
     socketServer.on('connection', connection => {
         logLineAsync(logFN, `[${port}] New connection established`);
@@ -66,10 +76,10 @@ webserver.post('/uploadFile', async (req, res) => {
 
         const writeStream = fs.createWriteStream(join(__dirname, 'uploadedFiles', fileMeta.name));
 
-        writeStream.on('error', error => {
+        writeStream.on('error', async error => {
             console.error(`Stream error: ${error}`);
 
-            logLineAsync(logFN, `[${port}] Stream error`);
+            await logLineAsync(logFN, `[${port}] Stream error`);
 
             const message = createMessage('uploadFile', 'ERROR', { uploadedSize, fileMetaSize: fileMeta.size });
 
@@ -79,7 +89,7 @@ webserver.post('/uploadFile', async (req, res) => {
         writeStream.on('finish', async () => {
             const message = createMessage('uploadFile', 'FINISH', { uploadedSize, fileMetaSize: fileMeta.size });
 
-            await logLineAsync(logFN, `[${port}] All chunks write, overall size --> ${uploadedSize}`);
+            await logLineAsync(logFN, `[${port}] All chunks writed, overall size --> ${uploadedSize}. File ${fileMeta.name} uploaded`);
 
             connection.send(JSON.stringify(message));
 
@@ -94,32 +104,28 @@ webserver.post('/uploadFile', async (req, res) => {
             });
 
             clients = clients.filter((client => client._id !== clientId));
+
+            socketServer.close();
         });
 
         clients.push({ connection: connection, _id: clientId, lastkeepalive: Date.now() });
         
-        connection.on('message', (data, isBinary) => {
+        connection.on('message', async (data, isBinary) => {
             if (data.toString() === "KEEP_ME_ALIVE") clients.forEach(client => client._id === clientId ? client.lastkeepalive = Date.now() : null);
             else {
                 if (isBinary) {
                     const fileData = data;
+
+                    if (uploadedSize === 0) await logLineAsync(logFN, `[${port}] Upload file ${fileMeta.name} is started`);
 
                     uploadedSize += fileData.length;
 
                     writeStream.write(fileData, async () => {
                         const message = createMessage('uploadFile', 'SUCCESS', { uploadedSize, fileMetaSize: fileMeta.size });
 
-                        await logLineAsync(logFN, `[${port}] Chunk ${currentChunkNumber} write, size --> ${fileData.length}`);
+                        await logLineAsync(logFN, `[${port}] Chunk ${currentChunkNumber} writed, size --> ${fileData.length}`);
 
                         currentChunkNumber += 1;
-
-
-
-
-                        // console.log(clients.find(client => client._id === clientId) ? true : false);
-
-
-
 
                         if (uploadedSize === fileMeta.size) writeStream.end();
 
