@@ -128,8 +128,7 @@ webserver.post('/uploadFile', async (req, res) => {
                         currentChunkNumber += 1;
 
                         if (uploadedSize === fileMeta.size) writeStream.end();
-
-                        connection.send(JSON.stringify(message));
+                        else connection.send(JSON.stringify(message));
                     });
                 }
             }
