@@ -1,6 +1,6 @@
 import express, { json } from 'express';
 import http from 'http';
-import { WebSocketServer } from 'ws';
+import { WebSocketServer, WebSocket } from 'ws';
 import * as fs from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -14,9 +14,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const webserver = express();
-const server = http.createServer(webserver)
+// const server = http.createServer(webserver)
 
-const socketServer = new WebSocketServer({ server });
+// const socketServer = new WebSocketServer({ server });
 
 webserver.use(cors({
     origin: 'http://localhost:4200' // 'http://178.172.195.18:7981'
@@ -25,6 +25,7 @@ webserver.use(cors({
 webserver.use(json());
 
 const port = 7980;
+const port2 = 7981;
 const logFN = join(__dirname, '_server.log');
 
 let clients = [];
@@ -48,6 +49,8 @@ webserver.post('/uploadFile', async (req, res) => {
     let timer = 0;
 
     res.send('START').end();
+
+    const socketServer = new WebSocket(`ws://localhost:${port2}/n1`); // const socketServer = new WebSocketServer({ port: port2, host: 'localhost' });
 
     socketServer.on('connection', connection => {
         logLineAsync(logFN, `[${port}] New connection established`);
@@ -91,6 +94,8 @@ webserver.post('/uploadFile', async (req, res) => {
             });
 
             clients = clients.filter((client => client._id !== clientId));
+
+            socketServer.close();
         });
 
         clients.push({ connection: connection, _id: clientId, lastkeepalive: Date.now() });
@@ -113,7 +118,7 @@ webserver.post('/uploadFile', async (req, res) => {
 
 
 
-                        console.log(clients.find(client => client._id === clientId) ? true : false);
+                        // console.log(clients.find(client => client._id === clientId) ? true : false);
 
 
 
@@ -165,6 +170,6 @@ webserver.post('/uploadFile', async (req, res) => {
     logLineAsync(logFN, "Socket server running on port " + port);
 });
 
-server.listen(port, () => {
+webserver.listen(port, () => { // server.listen(port, () => {
     logLineAsync(logFN, "Web server running on port " + port);
 });
