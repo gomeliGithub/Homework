@@ -62,8 +62,8 @@ webserver.post('/uploadFile', async (req, res) => {
 
     const socketServer = new WebSocketServer({ port: port2 }); 
 
-    socketServer.on('connection', connection => {
-        logLineAsync(logFN, `[${port}] New connection established`);
+    socketServer.on('connection', async connection => {
+        await logLineAsync(logFN, `[${port}] New connection established`);
 
         console.log("-------------------------------------");
         console.log(clientId);
