@@ -15,9 +15,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const webserver = express();
-// const server = http.createServer(webserver)
-
-// const socketServer = new WebSocketServer({ server });
 
 webserver.use(cors({
     origin: 'http://localhost:4200' // 'http://178.172.195.18:7981'
@@ -30,122 +27,47 @@ const port2 = 7981;
 const logFN = join(__dirname, '_server.log');
 
 let clients = [];
+let timer = 0;
 
-webserver.post('/uploadFile', async (req, res) => {
-    let clientId = req.body._id;
-    let fileMeta = JSON.parse(req.body.uploadFileMeta);
-    let comment = req.body.uploadFileComment;
+const socketServer = new WebSocketServer({ port: port2 }); 
 
-    const requiredImageTypes = [ 'image/jpeg', 'image/png', 'image/gif' ];
+socketServer.on('connection', (connection, request) => {
+    const clientId = parseFloat(request.url.substring(2), 10);
 
-    if (typeof clientId !== 'number' || clientId < 0 || clientId > 1 
-        || !requiredImageTypes.includes(fileMeta.type) 
-        || typeof comment !== 'string' || comment === ''
-    ) {
-        res.status(400).end();
+    logLineAsync(logFN, `[${port2}] New connection established. ClientId --- ${clientId}`);
 
-        return;
-    }
+    const activeClient = clients.find(client => client._id === clientId);
 
-    let activeUploadsNumber = 0;
-
-    clients.forEach(client => !client.activeUpload ? activeUploadsNumber += 1 : null);
-
-    if (activeUploadsNumber > 3) {
-        res.send('PENDING').end();
-
-        return;
-    }
-
-    let timer = 0;
-
-    res.send('START').end();
-
-    const socketServer = new WebSocketServer({ port: port2 }); 
-
-    socketServer.on('connection', connection => {
-        logLineAsync(logFN, `[${port}] New connection established`);
-
-        console.log("-------------------------------------");
-        console.log(clientId);
-        console.log(fileMeta);
-        console.log(comment);
-        console.log("-------------------------------------");
-
-        let currentChunkNumber = 0;
-        let uploadedSize = 0;
-
-        const writeStream = fs.createWriteStream(join(__dirname, 'uploadedFiles', fileMeta.name));
-
-        writeStream.on('error', async error => {
-            await fsPromises.unlink(join(__dirname, 'uploadedFiles', fileMeta.name));
-
-            console.error(`Stream error: ${error}`);
-
-            await logLineAsync(logFN, `[${port}] Stream error`);
-
-            const message = createMessage('uploadFile', 'ERROR', { uploadedSize, fileMetaSize: fileMeta.size });
-
-            connection.send(JSON.stringify(message));
-        });
-
-        writeStream.on('finish', async () => {
-            const message = createMessage('uploadFile', 'FINISH', { uploadedSize, fileMetaSize: fileMeta.size });
-
-            await logLineAsync(logFN, `[${port}] All chunks writed, overall size --> ${uploadedSize}. File ${fileMeta.name} uploaded`);
-
-            connection.send(JSON.stringify(message));
-
-            uploadedSize = 0;
-
-            clients.forEach(client => {
-                if (client._id === clientId) {
-                    client.connection.terminate();
-    
-                    client.connection = null;
-                }
-            });
-
-            clients = clients.filter((client => client._id !== clientId));
-
-            socketServer.close();
-        });
-
-        clients.push({ connection: connection, _id: clientId, lastkeepalive: Date.now() });
+    activeClient.connection = connection;
         
-        connection.on('message', async (data, isBinary) => {
-            if (data.toString() === "KEEP_ME_ALIVE") clients.forEach(client => client._id === clientId ? client.lastkeepalive = Date.now() : null);
-            else {
-                if (isBinary) {
-                    const fileData = data;
+    connection.on('message', async (data, isBinary) => {
+        if (data.toString() === "KEEP_ME_ALIVE") clients.forEach(client => client._id === clientId ? client.lastkeepalive = Date.now() : null);
+        else {
+            if (isBinary) {
+                const fileData = data;
 
-                    if (uploadedSize === 0) await logLineAsync(logFN, `[${port}] Upload file ${fileMeta.name} is started`);
+                if (activeClient.uploadedSize === 0) await logLineAsync(logFN, `[${port2}] Upload file ${activeClient.fileMetaName} is started`);
 
-                    uploadedSize += fileData.length;
+                activeClient.uploadedSize += fileData.length;
 
-                    writeStream.write(fileData, async () => {
-                        const message = createMessage('uploadFile', 'SUCCESS', { uploadedSize, fileMetaSize: fileMeta.size });
+                activeClient.activeWriteStream.write(fileData, async () => {
+                    const message = createMessage('uploadFile', 'SUCCESS', { uploadedSize: activeClient.uploadedSize, fileMetaSize: activeClient.fileMetaSize });
 
-                        await logLineAsync(logFN, `[${port}] Chunk ${currentChunkNumber} writed, size --> ${fileData.length}`);
+                    await logLineAsync(logFN, `[${port2}] Chunk ${activeClient.currentChunkNumber} writed, size --> ${fileData.length}`);
 
-                        currentChunkNumber += 1;
+                    activeClient.currentChunkNumber += 1;
 
-                        if (uploadedSize === fileMeta.size) writeStream.end();
-                        else connection.send(JSON.stringify(message));
-                    });
-                }
+                    if (activeClient.uploadedSize === activeClient.fileMetaSize) activeClient.activeWriteStream.end();
+                    else activeClient.connection.send(JSON.stringify(message));
+                });
             }
-        });
+        }
+    });
 
-        connection.on('close', async () => {
-            await fsPromises.unlink(join(__dirname, 'uploadedFiles', fileMeta.name));
-        });
+    connection.on('error', async () => {
+        await fsPromises.unlink(join(__dirname, 'uploadedFiles', activeClient.fileMetaName));
 
-        connection.on('error', async () => {
-            await fsPromises.unlink(join(__dirname, 'uploadedFiles', fileMeta.name));
-        });
-
-        return;
+        clients = clients.filter(client => client._id !== activeClient._id);
     });
 
     setInterval(() => {
@@ -158,7 +80,7 @@ webserver.post('/uploadFile', async (req, res) => {
     
                     client.connection = null;
     
-                    logLineAsync(logFN, `[${port}] Один из клиентов отключился, закрываем соединение с ним`);
+                    logLineAsync(logFN, `[${port2}] Один из клиентов отключился, закрываем соединение с ним`);
                 }
                 else {
                     const message = createMessage('timer', 'timer= ' + timer);
@@ -171,19 +93,91 @@ webserver.post('/uploadFile', async (req, res) => {
         }
 
         catch {
-            logLineAsync(logFN, `[${port}] Server error`);
+            logLineAsync(logFN, `[${port2}] Server error`);
     
             res.status(500).end();
     
             return;
         }
     }, 3000);
-
-    // res.send('START').end();
-    
-    logLineAsync(logFN, "Socket server running on port " + port);
 });
 
-webserver.listen(port, () => { // server.listen(port, () => {
+logLineAsync(logFN, "Socket server running on port " + port2);
+
+webserver.post('/uploadFile', async (req, res) => {
+    const clientId = req.body._id;
+    const fileMeta = JSON.parse(req.body.uploadFileMeta);
+    const comment = req.body.uploadFileComment;
+
+    const requiredImageTypes = [ 'image/jpeg', 'image/png', 'image/gif' ];
+
+    if (typeof clientId !== 'number' || clientId < 0 || clientId > 1 
+        || !requiredImageTypes.includes(fileMeta.type) 
+        || typeof comment !== 'string' || comment === ''
+    ) {
+        res.status(400).end();
+
+        return;
+    }
+
+    const activeUploadClient = clients.some(client => client._id === clientId);
+
+    let activeUploadsClientNumber = 0;
+
+    clients.forEach(client => client.activeWriteStream ? activeUploadsClientNumber += 1 : null);
+
+    if (activeUploadClient) {
+        res.status(400).end();
+
+        return;
+    }
+
+    if (activeUploadsClientNumber > 3) {
+        res.send('PENDING').end();
+
+        return;
+    }
+
+    res.send('START').end();
+
+    let currentChunkNumber = 0;
+    let uploadedSize = 0;
+
+    const writeStream = fs.createWriteStream(join(__dirname, 'uploadedFiles', fileMeta.name));
+
+    writeStream.on('error', async error => {
+        await fsPromises.unlink(join(__dirname, 'uploadedFiles', fileMeta.name));
+
+        await logLineAsync(logFN, `[${port2}] Stream error`);
+
+        const activeClient = clients.find(client => client._id === clientId);
+
+        const message = createMessage('uploadFile', 'ERROR', { uploadedSize: activeClient.uploadedSize, fileMetaSize: fileMeta.size });
+
+        connection.send(JSON.stringify(message));
+    });
+
+    writeStream.on('finish', async () => {
+        const activeClient = clients.find(client => client._id === clientId);
+
+        const message = createMessage('uploadFile', 'FINISH', { uploadedSize: activeClient.uploadedSize, fileMetaSize: fileMeta.size });
+
+        await logLineAsync(logFN, `[${port2}] All chunks writed, overall size --> ${activeClient.uploadedSize}. File ${fileMeta.name} uploaded`);
+
+        activeClient.connection.send(JSON.stringify(message));
+
+        activeClient.connection.terminate();
+    
+        activeClient.connection = null;
+
+        clients = clients.filter((client => client.connection));
+    });
+
+    clients.push({ _id: clientId, activeWriteStream: writeStream, currentChunkNumber, uploadedSize, fileMetaName: fileMeta.name, fileMetaSize: fileMeta.size, lastkeepalive: Date.now() });
+
+    return;
+});
+
+webserver.listen(port, () => {
     logLineAsync(logFN, "Web server running on port " + port);
 });

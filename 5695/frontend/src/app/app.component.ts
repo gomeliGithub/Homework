@@ -46,14 +46,16 @@ export class AppComponent {
             size         : this._formFile.size,
             type         : this._formFile.type
         }); 
+
+        const newClientId: number = Math.random();
         
         this.http.post(`${this._webServerHost}/uploadFile`, { 
-            _id: Math.random(), 
+            _id: newClientId, 
             uploadFileMeta: fileMetaJson, 
             uploadFileComment: this.uploadFileForm.value['formFileComment'] as string
         }, { responseType: 'text' }).subscribe(result => {
             if (result === 'START') {
-                this.appService.uploadFile(this._formFile, this.uploadFileForm);
+                this.appService.uploadFile(this._formFile, this.uploadFileForm, newClientId);
             }
         });
     }

@@ -18,8 +18,8 @@ export class WebSocketService {
 
     private _progressElement: HTMLDivElement;
 
-    public on (host: string, uploadFileForm: FormGroup, slicedFileData: ArrayBuffer[]): void {
-        this._connection = new WebSocket(host);
+    public on (host: string, uploadFileForm: FormGroup, slicedFileData: ArrayBuffer[], newClientId: number): void {
+        this._connection = new WebSocket(host + `/:${newClientId}`);
 
         this._keepAliveTimer = setInterval(() => {
             this.send('KEEP_ME_ALIVE');

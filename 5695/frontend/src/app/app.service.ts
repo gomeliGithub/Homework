@@ -13,7 +13,7 @@ export class AppService {
 
     private _socketServerHost: string = environment.webSocketURL;
 
-    public uploadFile (formFile: File, uploadFileForm: FormGroup) {
+    public uploadFile (formFile: File, uploadFileForm: FormGroup, newClientId: number) {
         const reader = new FileReader();
 
         reader.onload = event => {
@@ -25,7 +25,7 @@ export class AppService {
                 slicedFileData.push(fileData.slice(i, i + 100000));
             } 
 
-            this.webSocketService.on(this._socketServerHost, uploadFileForm, slicedFileData);
+            this.webSocketService.on(this._socketServerHost, uploadFileForm, slicedFileData, newClientId);
         }
 
         reader.readAsArrayBuffer(formFile);
