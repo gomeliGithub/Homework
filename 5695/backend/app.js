@@ -10,6 +10,7 @@ import cors from 'cors';
 import logLineAsync from './utils/logLineAsync.js';
 
 import createMessage from './createMessage.js';
+import appendFileInfoWithComments from './appendFileInfoWithComments.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -25,6 +26,8 @@ webserver.use(json());
 const port = 7980;
 const port2 = 7981;
 const logFN = join(__dirname, '_server.log');
+const filesInfoWithCommentsFN = join(__dirname, 'filesInfoWithComments.json');
+const filesInfoWithCommentsFolderFN = join(__dirname, 'uploadedFiles');
 
 let clients = [];
 let timer = 0;
@@ -32,13 +35,17 @@ let timer = 0;
 const socketServer = new WebSocketServer({ port: port2 }); 
 
 socketServer.on('connection', (connection, request) => {
-    const clientId = parseFloat(request.url.substring(2), 10);
+    const clientId = parseFloat(request.url.substring(2));
+
+    if (isNaN(clientId)) connection.terminate();
+
+    const currentClient = clients.find(client => client._id === clientId);
+
+    if (!currentClient) connection.terminate();
+
+    currentClient.connection = connection;
 
     logLineAsync(logFN, `[${port2}] New connection established. ClientId --- ${clientId}`);
-
-    const activeClient = clients.find(client => client._id === clientId);
-
-    activeClient.connection = connection;
         
     connection.on('message', async (data, isBinary) => {
         if (data.toString() === "KEEP_ME_ALIVE") clients.forEach(client => client._id === clientId ? client.lastkeepalive = Date.now() : null);
@@ -46,28 +53,28 @@ socketServer.on('connection', (connection, request) => {
             if (isBinary) {
                 const fileData = data;
 
-                if (activeClient.uploadedSize === 0) await logLineAsync(logFN, `[${port2}] Upload file ${activeClient.fileMetaName} is started`);
+                if (currentClient.uploadedSize === 0) await logLineAsync(logFN, `[${port2}] Upload file ${currentClient.fileMetaName} is started`);
 
-                activeClient.uploadedSize += fileData.length;
+                currentClient.uploadedSize += fileData.length;
 
-                activeClient.activeWriteStream.write(fileData, async () => {
-                    const message = createMessage('uploadFile', 'SUCCESS', { uploadedSize: activeClient.uploadedSize, fileMetaSize: activeClient.fileMetaSize });
+                currentClient.activeWriteStream.write(fileData, async () => {
+                    const message = createMessage('uploadFile', 'SUCCESS', { uploadedSize: currentClient.uploadedSize, fileMetaSize: currentClient.fileMetaSize });
 
-                    await logLineAsync(logFN, `[${port2}] Chunk ${activeClient.currentChunkNumber} writed, size --> ${fileData.length}`);
+                    await logLineAsync(logFN, `[${port2}] ClientId --- ${clientId}. Chunk ${currentClient.currentChunkNumber} writed, size --> ${fileData.length}`);
 
-                    activeClient.currentChunkNumber += 1;
+                    currentClient.currentChunkNumber += 1;
 
-                    if (activeClient.uploadedSize === activeClient.fileMetaSize) activeClient.activeWriteStream.end();
-                    else activeClient.connection.send(JSON.stringify(message));
+                    if (currentClient.uploadedSize === currentClient.fileMetaSize) currentClient.activeWriteStream.end();
+                    else currentClient.connection.send(JSON.stringify(message));
                 });
             }
         }
     });
 
     connection.on('error', async () => {
-        await fsPromises.unlink(join(__dirname, 'uploadedFiles', activeClient.fileMetaName));
+        await fsPromises.unlink(join(__dirname, 'uploadedFiles', currentClient.fileMetaName));
 
-        clients = clients.filter(client => client._id !== activeClient._id);
+        clients = clients.filter(client => client._id !== currentClient._id);
     });
 
     setInterval(() => {
@@ -109,16 +116,17 @@ webserver.post('/uploadFile', async (req, res) => {
     const fileMeta = JSON.parse(req.body.uploadFileMeta);
     const comment = req.body.uploadFileComment;
 
-    const requiredImageTypes = [ 'image/jpeg', 'image/png', 'image/gif' ];
-
     if (typeof clientId !== 'number' || clientId < 0 || clientId > 1 
-        || !requiredImageTypes.includes(fileMeta.type) 
         || typeof comment !== 'string' || comment === ''
+        || fileMeta.name.length < 4
+        || fileMeta.size > 104857600
     ) {
         res.status(400).end();
 
         return;
     }
+
+    const newFilePath = join(__dirname, 'uploadedFiles', fileMeta.name);
 
     const activeUploadClient = clients.some(client => client._id === clientId);
 
@@ -138,44 +146,93 @@ webserver.post('/uploadFile', async (req, res) => {
         return;
     }
 
+    try {
+        await fsPromises.access(newFilePath, fsPromises.constants.F_OK);
+
+        res.send('FILEEXISTS').end();
+
+        return;
+    } catch {}
+
+    const uploadedFilesNumber = (await fsPromises.readdir(filesInfoWithCommentsFolderFN)).length;
+
+    if (uploadedFilesNumber === 15) {
+        res.send('MAXCOUNT').end();
+
+        return;
+    }
+
     res.send('START').end();
 
     let currentChunkNumber = 0;
     let uploadedSize = 0;
 
-    const writeStream = fs.createWriteStream(join(__dirname, 'uploadedFiles', fileMeta.name));
+    const writeStream = fs.createWriteStream(newFilePath);
 
-    writeStream.on('error', async error => {
-        await fsPromises.unlink(join(__dirname, 'uploadedFiles', fileMeta.name));
+    writeStream.on('error', async () => {
+        await fsPromises.unlink(newFilePath);
 
-        await logLineAsync(logFN, `[${port2}] Stream error`);
+        await logLineAsync(logFN, `[${port2}] ClientId --- ${clientId}. Stream error`);
 
-        const activeClient = clients.find(client => client._id === clientId);
+        const currentClient = clients.find(client => client._id === clientId);
 
-        const message = createMessage('uploadFile', 'ERROR', { uploadedSize: activeClient.uploadedSize, fileMetaSize: fileMeta.size });
+        const message = createMessage('uploadFile', 'ERROR', { uploadedSize: currentClient.uploadedSize, fileMetaSize: fileMeta.size });
 
         connection.send(JSON.stringify(message));
     });
 
     writeStream.on('finish', async () => {
-        const activeClient = clients.find(client => client._id === clientId);
+        const currentClient = clients.find(client => client._id === clientId);
 
-        const message = createMessage('uploadFile', 'FINISH', { uploadedSize: activeClient.uploadedSize, fileMetaSize: fileMeta.size });
+        const message = createMessage('uploadFile', 'FINISH', { uploadedSize: currentClient.uploadedSize, fileMetaSize: fileMeta.size });
 
-        await logLineAsync(logFN, `[${port2}] All chunks writed, overall size --> ${activeClient.uploadedSize}. File ${fileMeta.name} uploaded`);
+        const newFileInfo = {
+            name: fileMeta.name,
+            comment: currentClient.comment
+        }
 
-        activeClient.connection.send(JSON.stringify(message));
+        await appendFileInfoWithComments(fsPromises, filesInfoWithCommentsFN, newFileInfo);
 
-        activeClient.connection.terminate();
+        await logLineAsync(logFN, `[${port2}] ClientId --- ${clientId}. All chunks writed, overall size --> ${currentClient.uploadedSize}. File ${fileMeta.name} uploaded`);
+
+        currentClient.connection.send(JSON.stringify(message));
+
+        currentClient.connection.terminate();
     
-        activeClient.connection = null;
+        currentClient.connection = null;
 
         clients = clients.filter((client => client.connection));
     });
 
-    clients.push({ _id: clientId, activeWriteStream: writeStream, currentChunkNumber, uploadedSize, fileMetaName: fileMeta.name, fileMetaSize: fileMeta.size, lastkeepalive: Date.now() });
+    clients.push({ _id: clientId, activeWriteStream: writeStream, currentChunkNumber, uploadedSize, fileMetaName: fileMeta.name, fileMetaSize: fileMeta.size, comment, lastkeepalive: Date.now() });
 
     return;
+});
+
+webserver.get('/getFilesInfo', async (_, res) => {
+    const readStream = fs.createReadStream(filesInfoWithCommentsFN, { encoding: 'utf8' });
+
+    let filesInfoWithComments = '';
+
+    readStream.on('data', chunk => filesInfoWithComments += chunk);
+
+    readStream.on('end', () => res.send(JSON.parse(filesInfoWithComments)).end());
+});
+
+webserver.get('/getFile/:fileName', async (req, res) => {
+    const fileName = req.params.fileName.substring(1);
+
+    const filePath = join(filesInfoWithCommentsFolderFN, fileName);
+
+    try {
+        await fsPromises.access(filePath, fsPromises.constants.F_OK);
+    } catch {
+        res.status(400).end();
+
+        return;
+    }
+
+    res.download(filePath);
 });
 
 webserver.listen(port, () => {

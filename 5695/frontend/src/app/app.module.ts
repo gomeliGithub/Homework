@@ -6,9 +6,12 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { AppComponent } from './app.component';
 import { AppService } from './app.service';
 
+import { DownloadedFilesListComponent } from './downloaded-files-list/downloaded-files-list.component';
+
 @NgModule({
     declarations: [
-        AppComponent
+        AppComponent,
+        DownloadedFilesListComponent
     ],
     imports: [
         BrowserModule,

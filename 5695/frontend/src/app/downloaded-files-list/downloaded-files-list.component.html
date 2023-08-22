@@ -1,0 +1,5 @@
+<div class="list-group">
+    <a *ngFor="let fileInfo of filesInfoWithComments" href="{{webServerHost}}/getFile/:{{fileInfo.name}}" class="list-group-item list-group-item-action list-group-item-info">
+        {{fileInfo.name}} - "{{fileInfo.comment}}"
+    </a>
+</div>
