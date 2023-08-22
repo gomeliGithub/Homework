@@ -216,6 +216,8 @@ webserver.get('/getFilesInfo', async (_, res) => {
 
     catch {
         fsPromises.writeFile(filesInfoWithCommentsFN, JSON.stringify([]));
+
+        res.send([]);
     }
 
     const readStream = fs.createReadStream(filesInfoWithCommentsFN, { encoding: 'utf8' });
