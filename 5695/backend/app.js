@@ -18,7 +18,7 @@ const __dirname = dirname(__filename);
 const webserver = express();
 
 webserver.use(cors({
-    origin: 'http://178.172.195.18:7980' // 'http://localhost:4200'
+    origin: 'http://test.expapp.online' // 'http://localhost:4200'
 }));
 
 webserver.use(json());
@@ -217,7 +217,9 @@ webserver.get('/getFilesInfo', async (_, res) => {
     catch {
         fsPromises.writeFile(filesInfoWithCommentsFN, JSON.stringify([]));
 
-        res.send([]);
+        res.send([]).end();
+
+        return;
     }
 
     const readStream = fs.createReadStream(filesInfoWithCommentsFN, { encoding: 'utf8' });
