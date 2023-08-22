@@ -18,7 +18,7 @@ const __dirname = dirname(__filename);
 const webserver = express();
 
 webserver.use(cors({
-    origin: 'http://test.expapp.online' // 'http://localhost:4200'
+    origin: 'http://178.172.195.18:7980' // 'http://localhost:4200'
 }));
 
 webserver.use(json());
@@ -210,6 +210,14 @@ webserver.post('/uploadFile', async (req, res) => {
 });
 
 webserver.get('/getFilesInfo', async (_, res) => {
+    try {
+        await fsPromises.access(filesInfoWithCommentsFN, fsPromises.constants.F_OK);
+    }
+
+    catch {
+        fsPromises.writeFile(filesInfoWithCommentsFN, JSON.stringify([]));
+    }
+
     const readStream = fs.createReadStream(filesInfoWithCommentsFN, { encoding: 'utf8' });
 
     let filesInfoWithComments = '';
