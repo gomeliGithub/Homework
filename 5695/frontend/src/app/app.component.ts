@@ -45,8 +45,8 @@ export class AppComponent implements AfterViewInit {
         });
     }
 
-    public fileValidator (control: FormControl): { [ s: string ]: boolean } | null {
-        if (this._formFile.size > 104857600 || this._formFile.name.length < 4) {
+    public fileValidator (_: FormControl): { [ s: string ]: boolean } | null {
+        if (this && (this._formFile.size > 104857600 || this._formFile.name.length < 4)) {
             return { "formFile": true };
         }
 
