@@ -23,8 +23,8 @@ webserver.use(cors({
 
 webserver.use(json());
 
-const port = 7980;
-const port2 = 7981;
+const port = 80;
+const port2 = 443;
 const logFN = join(__dirname, '_server.log');
 const filesInfoWithCommentsFN = join(__dirname, 'filesInfoWithComments.json');
 const filesInfoWithCommentsFolderFN = join(__dirname, 'uploadedFiles');
