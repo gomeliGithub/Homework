@@ -1,5 +1,5 @@
 export const environment = {
     production: true,
-    webServerURL: 'http://expapp.online:80',
-    webSocketURL: 'ws://expapp.online:443'
+    webServerURL: 'http://178.172.173.222:80',
+    webSocketURL: 'ws://178.172.173.222:443'
 };
