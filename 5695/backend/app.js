@@ -18,7 +18,7 @@ const __dirname = dirname(__filename);
 const webserver = express();
 
 webserver.use(cors({
-    origin: 'http://test.expapp.online' // 'http://localhost:4200'
+    origin: 'http://test.expapp.online:80' // 'http://localhost:4200'
 }));
 
 webserver.use(json());
