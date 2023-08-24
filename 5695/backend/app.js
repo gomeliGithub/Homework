@@ -30,7 +30,6 @@ const filesInfoWithCommentsFN = join(__dirname, 'filesInfoWithComments.json');
 const filesInfoWithCommentsFolderFN = join(__dirname, 'uploadedFiles');
 
 let clients = [];
-let timer = 0;
 
 const socketServer = new WebSocketServer({ port: port2 }); 
 
@@ -85,13 +84,14 @@ socketServer.on('connection', (connection, request) => {
         try {
             clients.forEach(client => {
                 if ((Date.now() - client.lastkeepalive) > 12000) {
-                    client.connection.terminate();
+                    fsPromises.unlink(join(__dirname, 'uploadedFiles', currentClient.fileMetaName)).then(() => {
+                        client.connection.terminate();
     
-                    client.connection = null;
-    
-                    logLineAsync(logFN, `[${port2}] Один из клиентов отключился, закрываем соединение с ним`);
-                }
-                else {
+                        client.connection = null;
+        
+                        logLineAsync(logFN, `[${port2}] Один из клиентов отключился, закрываем соединение с ним`);
+                    });
+                } else {
                     const message = createMessage('timer', 'timer= ' + timer);
     
                     client.connection.send(JSON.stringify(message));
