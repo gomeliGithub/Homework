@@ -46,6 +46,8 @@ socketServer.on('connection', (connection, request) => {
     currentClient.connection = connection;
 
     logLineAsync(logFN, `[${port2}] New connection established. ClientId --- ${clientId}`);
+
+    let timer = 0;
         
     connection.on('message', async (data, isBinary) => {
         if (data.toString() === "KEEP_ME_ALIVE") clients.forEach(client => client._id === clientId ? client.lastkeepalive = Date.now() : null);
