@@ -34,7 +34,7 @@ export class WebSocketService {
         this._connection.onmessage = (event: MessageEvent<IWSMessage>) => {
             const message: IWSMessage = JSON.parse(event.data as unknown as string);
             
-            console.log(`Клиентом получено сообщение от сервера: ${message.event} ----- ${message.text}`);
+            // console.log(`Клиентом получено сообщение от сервера: ${message.event} ----- ${message.text}`);
 
             if (message.event === 'uploadFile') {
                 if (message.text === 'ERROR') {
@@ -43,13 +43,19 @@ export class WebSocketService {
                     this._changeProgressBar(message.percentUploaded, true);
 
                     setTimeout(() => this._changeProgressBar(0), 2000);
-                } else if (message.text === 'FINISH') { console.log(message.percentUploaded);
+                } else if (message.text === 'FINISH') { // console.log(message.percentUploaded);
                     this._changeProgressBar(message.percentUploaded);
 
                     this._clearUploadFileData(uploadFileForm);
 
-                    setTimeout(() => this._changeProgressBar(0), 1000);
-                } else if (message.text === 'SUCCESS') { console.log(message.percentUploaded);
+                    setTimeout(() => {
+                        this._changeProgressBar(0);
+
+                        const responseMessageElement: HTMLSpanElement = document.getElementById('responseMessage') as HTMLSpanElement;
+
+                        responseMessageElement.textContent = "Файл успешно загружен.";
+                    }, 1000);
+                } else if (message.text === 'SUCCESS') { // console.log(message.percentUploaded);
                     this._changeProgressBar(message.percentUploaded);
 
                     this.sendFile(this._slicedFileData, this._currentChunkNumber += 1);
