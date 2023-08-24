@@ -101,10 +101,6 @@ socketServer.on('connection', (connection, request) => {
 
         catch {
             logLineAsync(logFN, `[${port2}] Server error`);
-    
-            res.status(500).end();
-    
-            return;
         }
     }, 3000);
 });
