@@ -1,0 +1,13 @@
+<table class="table">
+    <thead>
+        <tr>
+            <th *ngFor="let fieldTitle of fieldsTitles" scope="col">{{fieldTitle}}</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let fieldTitle of fieldsTitles; let i = index">
+            <th scope="row">{{i}}</th>
+            <td *ngFor="let fieldValue of fieldsValues">{{fieldValue}}</td>
+        </tr>
+    </tbody>
+</table>

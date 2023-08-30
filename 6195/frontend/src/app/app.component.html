@@ -1,0 +1,24 @@
+<div>
+    <form [formGroup]="sqlQueryForm">
+        <div class="form-group mb-3">
+            <label for="sqlQuery" class="form-label">Введите SQL запрос</label>
+            <input class="form-control" id="sqlQuery" type="text" name="sqlQueryFormQuery" formControlName="sqlQueryFormQuery">
+            <div class="alert alert-danger" *ngIf="sqlQueryForm.controls['sqlQueryFormQuery'].invalid && sqlQueryForm.controls['sqlQueryFormQuery'].touched">
+                Не введён запрос
+            </div>
+        </div>
+        <div class="form-group mb-3">
+            <label for="dbName" class="form-label">Выберите базу данных</label>
+            <select class="form-select" id="dbName" name="sqlQueryFormDBName" formControlName="sqlQueryFormDBName" [attr.db-list]="getDBList()">
+                <option *ngFor="let dbName of dbList" value={{dbName}}>{{dbName}}</option>
+            </select>
+            <div class="alert alert-danger" *ngIf="sqlQueryForm.controls['sqlQueryFormDBName'].invalid && sqlQueryForm.controls['sqlQueryFormDBName'].touched">
+                Не выбрана база данных
+            </div>
+        </div>
+        <div class="form-group text-center mb-3">
+            <button type="button" class="btn btn-primary" [disabled]="sqlQueryForm.invalid" (click)="sendSQLQuery()">Отправить SQL запрос</button>
+        </div>
+    </form>
+    <ng-template #appQueryResult></ng-template>
+</div>
