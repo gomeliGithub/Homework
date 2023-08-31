@@ -76,7 +76,7 @@ webserver.post('/sendSQLQuery', async (req, res) => {
                 // console.log(itemsValues);
 
                 if (sqlQuery.startsWith('SELECT')) res.send({ fieldsTitles, itemsValues }).end();
-                else res.send({ rowsNumberAffected: results.affectedRows });
+                else res.send({ rowsNumberAffected: results.affectedRows }).end();
             }
 
             connection.end();
