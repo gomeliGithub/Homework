@@ -1,6 +1,6 @@
 import { Component, ComponentRef, ViewChild, ViewContainerRef } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { Subscription } from 'rxjs';
+import { Observable, Subscription, catchError, map } from 'rxjs';
 
 import { AppService } from './app.service';
 
@@ -26,14 +26,24 @@ export class AppComponent {
 
     public dbList: string[];
 
-    public getDBList (): Subscription {
-        return this.appService.getDBList().subscribe(data => this.dbList = data);
-    }
+    public dbListFunc: Observable<string | string[]> = this.appService.getDBList().pipe(map(data => {
+        this.dbList = data;
+
+        return data;
+    }), catchError(error => {
+        console.error(error);
+
+        return '';
+    }));
+    
 
     public sendSQLQuery () {
         const sqlQuery: string = this.sqlQueryForm.value['sqlQueryFormQuery'];
         const dbName: string = this.sqlQueryForm.value['sqlQueryFormDBName'];
 
-        return this.appService.sendSQLQuery(sqlQuery, dbName).subscribe(data => this.appService.createQueryResultInstance(this.queryResultViewRef, this.queryResultComponentRef, data));
+        return this.appService.sendSQLQuery(sqlQuery, dbName).subscribe({
+            next: data => this.appService.createQueryResultInstance(this.queryResultViewRef, this.queryResultComponentRef, data),
+            error: error => console.error(error)
+        });
     }
 }

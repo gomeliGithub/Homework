@@ -8,7 +8,7 @@ import { Component } from '@angular/core';
 export class QueryResultComponent {
     constructor () { }
 
-    fieldsTitles?: string[];
-    fieldsValues?: string[][];
+    fieldsTitles?: string[] = [ '#' ];
+    itemsValues?: string[][];
     rowsNumberAffected?: number;
 }

@@ -24,13 +24,16 @@ export class AppService {
         return this.http.post(`${this._host}/sendSQLQuery`, { sqlQuery, dbName }) as Observable<IQueryResult>;
     }
 
-    public createQueryResultInstance (viewRef: ViewContainerRef, componentRef: ComponentRef<QueryResultComponent>, queryResultData: IQueryResult): void {
+    public createQueryResultInstance (viewRef: ViewContainerRef, componentRef: ComponentRef<QueryResultComponent>, queryResultData: IQueryResult): void { 
+        console.log(queryResultData);
+
+
         viewRef.clear();
 
         const queryResultComponent: ComponentRef<QueryResultComponent> = viewRef.createComponent(QueryResultComponent);
 
-        queryResultComponent.instance.fieldsTitles = queryResultData.fieldsTitles;
-        queryResultComponent.instance.fieldsValues = queryResultData.fieldsValues;
+        queryResultComponent.instance.fieldsTitles = queryResultData.fieldsTitles ? queryResultComponent.instance.fieldsTitles?.concat(queryResultData.fieldsTitles) : undefined;
+        queryResultComponent.instance.itemsValues = queryResultData.itemsValues;
         queryResultComponent.instance.rowsNumberAffected = queryResultData.rowsNumberAffected;
 
         componentRef = queryResultComponent;

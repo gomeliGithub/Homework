@@ -1,5 +1,5 @@
 export interface IQueryResult {
     fieldsTitles?: string[];
-    fieldsValues?: string[][];
+    itemsValues?: string[][];
     rowsNumberAffected?: number;
 }

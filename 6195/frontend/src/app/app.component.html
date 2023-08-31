@@ -7,9 +7,9 @@
                 Не введён запрос
             </div>
         </div>
-        <div class="form-group mb-3">
+        <div class="form-group mb-3" [attr.db-list]="dbListFunc | async">
             <label for="dbName" class="form-label">Выберите базу данных</label>
-            <select class="form-select" id="dbName" name="sqlQueryFormDBName" formControlName="sqlQueryFormDBName" [attr.db-list]="getDBList()">
+            <select class="form-select" id="dbName" name="sqlQueryFormDBName" formControlName="sqlQueryFormDBName">
                 <option *ngFor="let dbName of dbList" value={{dbName}}>{{dbName}}</option>
             </select>
             <div class="alert alert-danger" *ngIf="sqlQueryForm.controls['sqlQueryFormDBName'].invalid && sqlQueryForm.controls['sqlQueryFormDBName'].touched">
