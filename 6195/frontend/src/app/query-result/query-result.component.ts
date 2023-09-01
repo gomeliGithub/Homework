@@ -8,6 +8,8 @@ import { Component } from '@angular/core';
 export class QueryResultComponent {
     constructor () { }
 
+    queryResultStatus: string;
+
     fieldsTitles?: string[] = [ '#' ];
     itemsValues?: string[][];
     rowsNumberAffected?: number;

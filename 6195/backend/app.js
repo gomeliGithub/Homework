@@ -22,9 +22,23 @@ webserver.use(json());
 const port = 7980;
 const logFN = join(__dirname, '_server.log');
 
-webserver.get('/getDBList', async (_, res) => { 
-    const dbList = [ 'learning_db', 'site_db' ];
+let dbList = null;
 
+let connection = mysql.createConnection({
+    host     : process.env.DB_HOST,
+    user     : process.env.DB_USER,
+    password : process.env.DB_PASSWORD
+});
+
+connection.connect();
+
+connection.query('SHOW DATABASES', (_, results) => {
+    dbList = results.map(dbObj => dbObj['Database']);
+
+    connection.end();
+});
+
+webserver.get('/getDBList', async (_, res) => { 
     await logLineAsync(logFN, `[${port}] Get DBList`);
 
     res.send(dbList).end();
@@ -40,41 +54,41 @@ webserver.post('/sendSQLQuery', async (req, res) => {
 
         return;
     }
+
+    const allowedReservedWords = [ 'SELECT', 'FROM', 'WHERE', 'ORDER', 'BY', 'UPDATE', 'SET', 'WHERE', 'INSERT', 'INTO', 'VALUES', 'DELETE' ];
+    const forbiddenReservedWords = [ 'CREATE', 'DATABASE', 'SHOW', 'DATABASES', 'USE', 'TABLE', 'TABLES', 'DROP' ];
+
+    const splittedSqlQuery = sqlQuery.split(' ');
     
-    if (dbName !== ('learning_db' || 'site_db')) {
+    if (!dbList.includes(dbName) || splittedSqlQuery.some(word => (word.trim() === '' || forbiddenReservedWords.includes(word)) 
+            || (allowedReservedWords.includes(word) && word !== word.toUpperCase())
+        )
+    ) {
         res.status(400).end();
 
         return;
     }
 
-    const connectionConfig = {
-        host     : process.env.DB_HOST,
-        user     : process.env.DB_USER,
-        password : process.env.DB_PASSWORD,
-        database : dbName
-    };
-
     let connection = null;
 
     try {
-        connection = mysql.createConnection(connectionConfig); // в каждом обработчике express устанавливаем с MySQL новое соединение!
+        connection = mysql.createConnection({
+            host     : process.env.DB_HOST,
+            user     : process.env.DB_USER,
+            password : process.env.DB_PASSWORD,
+            database : dbName
+        });
 
         connection.connect();
 
         connection.query(`${sqlQuery};`, (error, results, fields) => {
             if (error) {
-                // здесь нет смысла делать throw, т.к. это коллбек, он выполняется не внутри try
                 reportServerError(error, res, logFN, port);
             }
             else {
                 const fieldsTitles = Object.keys(results[0]);
                 const itemsValues = results.map(item => Object.values(item));
-
-                // console.log(results);
-
-                // console.log(fieldsTitles);
-                // console.log(itemsValues);
-
+                
                 if (sqlQuery.startsWith('SELECT')) res.send({ fieldsTitles, itemsValues }).end();
                 else res.send({ rowsNumberAffected: results.affectedRows }).end();
             }
@@ -83,7 +97,6 @@ webserver.post('/sendSQLQuery', async (req, res) => {
         });
     }
     catch (error) {
-        // этот catch словит ошибки, которые могут возникнуть при createConnection или connect, но не ошибки возникшие при выполнении SQL-запроса
         reportServerError(error, res, logFN, port);
 
         if (connection) connection.end();
