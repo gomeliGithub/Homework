@@ -55,7 +55,7 @@ webserver.post('/sendSQLQuery', async (req, res) => {
         return;
     }
 
-    const allowedReservedWords = [ 'SELECT', 'FROM', 'WHERE', 'ORDER', 'BY', 'UPDATE', 'SET', 'WHERE', 'INSERT', 'INTO', 'VALUES', 'DELETE' ];
+    const allowedReservedWords = [ 'SELECT', 'FROM', 'WHERE', 'ORDER', 'BY', 'UPDATE', 'LIKE', 'SET', 'WHERE', 'INSERT', 'INTO', 'VALUES', 'DELETE' ];
     const forbiddenReservedWords = [ 'CREATE', 'DATABASE', 'SHOW', 'DATABASES', 'USE', 'TABLE', 'TABLES', 'DROP' ];
 
     const splittedSqlQuery = sqlQuery.split(' ');
