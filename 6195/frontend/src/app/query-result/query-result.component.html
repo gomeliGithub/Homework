@@ -1,18 +1,15 @@
-<ng-template *ngSwitch="queryResultStatus">
-    <table *ngSwitchCase="'TABLE'" class="table">
-        <thead>
-            <tr>
-                <th *ngFor="let fieldTitle of fieldsTitles" scope="col">{{fieldTitle}}</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr *ngFor="let itemValues of itemsValues; let i = index">
-                <th scope="row">{{i + 1}}</th>
-                <td *ngFor="let itemValue of itemValues">{{itemValue}}</td>
-            </tr>
-        </tbody>
-    </table>
-    <span *ngSwitchCase="'NUMBER'">Количество измененных строк {{rowsNumberAffected}}</span>
-    <span *ngSwitchCase="'ERROR'">Произошла ошибка при выполнении запроса</span>
-
-</ng-template>
+<table *ngIf="queryResultStatus === 'TABLE'" class="table table-bordered table-hover">
+    <thead>
+        <tr>
+            <th *ngFor="let fieldTitle of fieldsTitles" scope="col">{{fieldTitle}}</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let itemValues of itemsValues; let i = index">
+            <th scope="row">{{i + 1}}</th>
+            <td *ngFor="let itemValue of itemValues">{{itemValue}}</td>
+        </tr>
+    </tbody>
+</table>
+<span *ngIf="queryResultStatus === 'NUMBER'" class="text-center text-success">Количество измененных строк {{rowsNumberAffected}}</span>
+<span *ngIf="queryResultStatus === 'ERROR'" class="text-center text-danger">Произошла ошибка при выполнении запроса</span>
