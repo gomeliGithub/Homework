@@ -45,7 +45,7 @@ export class AppComponent {
 
         return this.appService.sendSQLQuery(sqlQuery, dbName).subscribe({
             next: data => {
-                data.queryResultStatus = data.fieldsTitles && data.itemsValues ? 'TABLE' : 'NUMBER';
+                data.queryResultStatus = data.fieldsTitles && data.itemsValues ? 'TABLE' : 'NUMBER'; debugger;
 
                 this.appService.createQueryResultInstance(this.queryResultViewRef, this.queryResultComponentRef, data)
             },

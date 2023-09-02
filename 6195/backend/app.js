@@ -55,14 +55,11 @@ webserver.post('/sendSQLQuery', async (req, res) => {
         return;
     }
 
-    const allowedReservedWords = [ 'SELECT', 'FROM', 'WHERE', 'ORDER', 'BY', 'UPDATE', 'LIKE', 'SET', 'WHERE', 'INSERT', 'INTO', 'VALUES', 'DELETE' ];
     const forbiddenReservedWords = [ 'CREATE', 'DATABASE', 'SHOW', 'DATABASES', 'USE', 'TABLE', 'TABLES', 'DROP' ];
 
     const splittedSqlQuery = sqlQuery.split(' ');
-    
-    if (!dbList.includes(dbName) || splittedSqlQuery.some(word => (word.trim() === '' || forbiddenReservedWords.includes(word)) 
-            || (allowedReservedWords.includes(word) && word !== word.toUpperCase())
-        )
+
+    if (!dbList.includes(dbName) || splittedSqlQuery.some(word => (word.trim() === '' || forbiddenReservedWords.includes(word.toUpperCase())))
     ) {
         res.status(400).end();
 
@@ -89,7 +86,7 @@ webserver.post('/sendSQLQuery', async (req, res) => {
                 const fieldsTitles = Object.keys(results[0]);
                 const itemsValues = results.map(item => Object.values(item));
                 
-                if (sqlQuery.startsWith('SELECT')) res.send({ fieldsTitles, itemsValues }).end();
+                if (sqlQuery.toUpperCase().startsWith('SELECT')) res.send({ fieldsTitles, itemsValues }).end();
                 else res.send({ rowsNumberAffected: results.affectedRows }).end();
             }
 
