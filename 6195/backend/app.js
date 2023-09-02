@@ -14,7 +14,7 @@ const __dirname = dirname(__filename);
 const webserver = express();
 
 webserver.use(cors({
-    origin: 'http://178.172.195.18:7982' // 'http://localhost:4200'
+    origin: 'http://expappon.vh122.hosterby.com' // 'http://localhost:4200'
 }));
 
 webserver.use(json());
