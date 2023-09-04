@@ -272,7 +272,7 @@ webserver.listen(port, async () => {
 
     await defineModels(sequelize);
 
-    sequelize.sync();
+    await sequelize.sync();
 
     await logLineAsync(logFN, "Web server running on port " + port);
 });
