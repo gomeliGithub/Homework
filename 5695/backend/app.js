@@ -11,6 +11,7 @@ import 'dotenv/config'
 import logLineAsync from './utils/logLineAsync.js';
 
 import dbConnection from './dbConnection.js';
+import defineModels from './models.js';
 
 import createMessage from './createMessage.js';
 import appendFileInfoWithComments from './appendFileInfoWithComments.js';
@@ -268,6 +269,8 @@ webserver.get('/getFile/:fileName', async (req, res) => {
 
 webserver.listen(port, async () => {
     const sequelize = await dbConnection();
+
+    await defineModels(sequelize);
 
     sequelize.sync();
 
