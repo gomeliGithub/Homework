@@ -1,4 +1,4 @@
-<form [formGroup]="uploadFileForm">
+<!--<form [formGroup]="uploadFileForm">
     <div class="form-group mb-3">
         <label for="formFile" class="form-label">Выберите файл</label>
         <input class="form-control" id="uploadFile" type="file" name="formFile" formControlName="formFile" (change)="fileChange($event)">
@@ -25,4 +25,5 @@
         <span class="text-danger" id="responseMessage">{{responseMessage}}</span>
     </div>
 </form>
-<ng-template #appDownloadedFilesList></ng-template>
+<ng-template #appDownloadedFilesList></ng-template>-->
+<router-outlet></router-outlet>

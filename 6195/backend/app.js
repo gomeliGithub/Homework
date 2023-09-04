@@ -86,7 +86,7 @@ webserver.post('/sendSQLQuery', async (req, res) => {
                 const fieldsTitles = Object.keys(results[0]);
                 const itemsValues = results.map(item => Object.values(item));
                 
-                if (sqlQuery.toUpperCase().startsWith('SELECT')) res.send({ fieldsTitles, itemsValues }).end();
+                if (!results.affectedRows) res.send({ fieldsTitles, itemsValues }).end();
                 else res.send({ rowsNumberAffected: results.affectedRows }).end();
             }
 

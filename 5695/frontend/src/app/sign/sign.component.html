@@ -1,0 +1,38 @@
+<form [formGroup]="signForm" novalidate>
+    <div class="form-group mb-3">
+        <label for="inputLogin" class="form-label">Логин</label>
+        <input class="form-control" id="inputLogin" type="text" name="login" formControlName="clientLogin" />
+        <div class="alert alert-danger" *ngIf="signForm.controls['clientLogin'].invalid && signForm.controls['clientLogin'].touched">
+            Не указан логин
+        </div>
+    </div>
+    <div class="form-group mb-3">
+        <label for="inputPassword" class="form-label">Пароль</label>
+        <input class="form-control" id="inputPassword" type="password" name="password" formControlName="clientPassword" />
+        <div class="alert alert-danger" *ngIf="signForm.controls['clientPassword'].invalid && signForm.controls['clientPassword'].touched">
+            Не указан пароль
+        </div>
+    </div>
+    <div *ngIf="op !== 'in'" class="form-group mb-3">
+        <label for="inputEmail" class="form-label">Email</label>
+        <input class="form-control" id="inputEmail" type="email" name="email" formControlName="clientEmail" />
+        <div class="alert alert-danger" *ngIf="signForm.controls['clientEmail'].invalid && signForm.controls['clientEmail'].touched">
+            Некорректный email
+        </div>
+    </div>
+    <div class="form-group text-center">
+        <button class="btn btn-primary" [disabled]="signForm.invalid" (click)="sign()">
+            <span *ngIf="op === 'in'; else signUpBlock">Войти</span>
+            <ng-template #signUpBlock>
+                <span>Зарегистрироваться</span>
+            </ng-template>
+        </button>
+        <span *ngIf="op === 'in'" class="d-block">
+            Ещё нет аккаунта?
+            <a href="/sign/:up" class="link-offset-2 link-offset-3-hover link-underline link-underline-opacity-0 link-underline-opacity-75-hover"> (Регистрация)</a>
+        </span>
+        <div class="alert alert-danger text-center">
+            <span class="text-danger" #signError></span>
+        </div>
+    </div>
+</form>

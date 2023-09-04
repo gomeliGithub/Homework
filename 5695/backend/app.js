@@ -1,5 +1,4 @@
 import express, { json } from 'express';
-import http from 'http';
 import { WebSocketServer } from 'ws';
 import * as fs from 'fs';
 import * as fsPromises from 'fs/promises';
@@ -18,7 +17,7 @@ const __dirname = dirname(__filename);
 const webserver = express();
 
 webserver.use(cors({
-    origin: 'http://test.expapp.online' // 'http://localhost:4200'
+    origin: 'http://localhost:4200' // 'http://test.expapp.online'
 }));
 
 webserver.use(json());
@@ -101,13 +100,33 @@ socketServer.on('connection', (connection, request) => {
             clients = clients.filter(client => client.connection);
         }
 
-        catch {
+        catch (error) { console.error(error);
             logLineAsync(logFN, `[${port2}] Server error`);
         }
     }, 3000);
 });
 
 logLineAsync(logFN, "Socket server running on port " + port2);
+
+webserver.post('/sign/:op', async (req, res) => {
+    const op = req.params['op'];
+
+    if (!op || op !== ('in' || 'up')) {
+        res.status(400).end();
+
+        return;
+    }
+
+    const { login, password, email } = req.body;
+
+    if (!login || !password || (op === 'up' && !email)) {
+        res.status(400).end();
+
+        return;
+    }
+
+    
+});
 
 webserver.post('/uploadFile', async (req, res) => {
     const clientId = req.body._id;

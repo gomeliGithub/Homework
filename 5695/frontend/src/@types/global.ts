@@ -1,5 +1,3 @@
-import { Observable } from "rxjs";
-
 export interface IWSMessage {
     event: string;
     text: string;
@@ -13,4 +11,10 @@ export interface ICreateOptions {
 export interface IFileInfoWithComments {
     name: string;
     comment: string;
+}
+
+export interface ISignData {
+    login: string;
+    password: string;
+    email?: string;
 }
