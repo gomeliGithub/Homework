@@ -1,12 +1,16 @@
 import express, { json } from 'express';
+import { Sequelize } from 'sequelize';
 import { WebSocketServer } from 'ws';
 import * as fs from 'fs';
 import * as fsPromises from 'fs/promises';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import cors from 'cors';
+import 'dotenv/config'
 
 import logLineAsync from './utils/logLineAsync.js';
+
+import dbConnection from './dbConnection.js';
 
 import createMessage from './createMessage.js';
 import appendFileInfoWithComments from './appendFileInfoWithComments.js';
@@ -124,8 +128,6 @@ webserver.post('/sign/:op', async (req, res) => {
 
         return;
     }
-
-    
 });
 
 webserver.post('/uploadFile', async (req, res) => {
@@ -264,6 +266,10 @@ webserver.get('/getFile/:fileName', async (req, res) => {
     res.download(filePath);
 });
 
-webserver.listen(port, () => {
-    logLineAsync(logFN, "Web server running on port " + port);
+webserver.listen(port, async () => {
+    const sequelize = await dbConnection();
+
+    sequelize.sync();
+
+    await logLineAsync(logFN, "Web server running on port " + port);
 });
