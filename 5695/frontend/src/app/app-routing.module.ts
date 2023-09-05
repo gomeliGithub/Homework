@@ -7,9 +7,9 @@ import { SignComponent } from './sign/sign.component';
 const appRoutes: Routes = [
     { path: 'sign/:op', component: SignComponent },
     { path: '', redirectTo: '/sign/in', pathMatch: 'full' },
-    // { path: 'signIn', redirectTo: '/sign/in', pathMatch: 'full' },
-    // { path: 'signUp', redirectTo: '/sign/up', pathMatch: 'full' },
-    { path: 'fileStorage', component: DownloadedFilesListComponent }
+    { path: 'signIn', redirectTo: '/sign/in', pathMatch: 'full' },
+    { path: 'signUp', redirectTo: '/sign/up', pathMatch: 'full' },
+    { path: 'fileStorage/:login', component: DownloadedFilesListComponent }
 ];
 
 @NgModule({

@@ -1,10 +1,10 @@
 import express, { json } from 'express';
-import { Sequelize } from 'sequelize';
 import { WebSocketServer } from 'ws';
 import * as fs from 'fs';
 import * as fsPromises from 'fs/promises';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import bcrypt from 'bcrypt'
 import cors from 'cors';
 import 'dotenv/config'
 
@@ -26,6 +26,8 @@ webserver.use(cors({
 }));
 
 webserver.use(json());
+
+const sequelize = await dbConnection();
 
 const port = 80;
 const port2 = 443;
@@ -129,6 +131,33 @@ webserver.post('/sign/:op', async (req, res) => {
 
         return;
     }
+
+    const client = await sequelize.models.Client.findOne({ login });
+
+    if (op === 'up') {
+        if (client) {
+            res.status(401).end();
+
+            return;
+        }
+
+        const passwordHash = await bcrypt.hash(password, 10);
+
+        await client.create({ login, password: passwordHash, email });
+
+
+        //////////////////////////// email ////////////////////////////
+
+        
+    } else {
+        if (!client) {
+            res.status(401).end();
+
+            return;
+        }
+
+        res.send({ login }).end();
+    }
 });
 
 webserver.post('/uploadFile', async (req, res) => {
@@ -198,7 +227,7 @@ webserver.post('/uploadFile', async (req, res) => {
 
         const message = createMessage('uploadFile', 'ERROR', { uploadedSize: currentClient.uploadedSize, fileMetaSize: fileMeta.size });
 
-        connection.send(JSON.stringify(message));
+        currentClient.connection.send(JSON.stringify(message));
     });
 
     writeStream.on('finish', async () => {
@@ -268,8 +297,6 @@ webserver.get('/getFile/:fileName', async (req, res) => {
 });
 
 webserver.listen(port, async () => {
-    const sequelize = await dbConnection();
-
     await defineModels(sequelize);
 
     await sequelize.sync();

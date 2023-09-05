@@ -55,7 +55,7 @@ webserver.post('/sendSQLQuery', async (req, res) => {
         return;
     }
 
-    const forbiddenReservedWords = [ 'CREATE', 'DATABASE', 'SHOW', 'DATABASES', 'USE', 'TABLE', 'TABLES', 'DROP' ];
+    const forbiddenReservedWords = [ 'CREATE', 'DATABASE', 'DATABASES', 'USE', 'DROP' ];
 
     const splittedSqlQuery = sqlQuery.split(' ');
 

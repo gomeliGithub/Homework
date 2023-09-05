@@ -3,9 +3,11 @@ import { HttpClient } from '@angular/common/http';
 import { Router, ActivatedRoute } from '@angular/router';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 
+import { map } from 'rxjs';
+
 import { environment } from '../../environments/environment';
 
-import { ISignData } from '../../@types/global';
+import { ISignData, ISignResponseData } from '../../@types/global';
 
 @Component({
     selector: 'app-sign',
@@ -32,7 +34,7 @@ export class SignComponent implements OnInit {
 
     public op: string = this.activateRoute.snapshot.params['op'];
 
-    ngOnInit(): void {
+    ngOnInit(): void { console.log(this.activateRoute.snapshot.params);
         
     }
 
@@ -40,8 +42,8 @@ export class SignComponent implements OnInit {
         const signData: ISignData = this.signForm.value;
         const signErrorElement: HTMLSpanElement = this.signErrorViewRef.element.nativeElement;
 
-        this.http.post(`${this._webServerHost}/sign:${this.op}`, signData).subscribe({
-            next: () => this.op === 'in' ? this.router.navigate([ '/fileStorage' ]) : this.router.navigate(['']),
+        this.http.post(`${this._webServerHost}/sign:${this.op}`, signData).pipe(map(data => data as ISignResponseData)).subscribe({
+            next: data => this.op === 'in' ? this.router.navigate([ '/fileStorage', data.login ]) : this.router.navigate(['']),
             error: () => signErrorElement.textContent = "Что-то пошло не так, попробуйте ещё раз."
         });
     }
