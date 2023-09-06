@@ -25,7 +25,9 @@ export class DownloadedFilesListComponent implements OnInit {
         private readonly titleService: Title
     ) { }
 
-    public filesInfo: Observable<IFileInfoWithComments[]> = this.downloadedFilesListComponentService.getFilesInfo().pipe(map(data => this.filesInfoWithComments = data));
+    public login: string = this.activateRoute.snapshot.params['login'];
+
+    public filesInfo: Observable<IFileInfoWithComments[]> = this.downloadedFilesListComponentService.getFilesInfo(this.login).pipe(map(data => this.filesInfoWithComments = data));
     public filesInfoWithComments: IFileInfoWithComments[];
 
     public webServerHost: string = environment.webServerURL;
@@ -40,7 +42,7 @@ export class DownloadedFilesListComponent implements OnInit {
     });
 
     ngOnInit (): void {
-        this.titleService.setTitle(this.activateRoute.snapshot.params['op']);
+        this.titleService.setTitle(this.login);
     }
 
     public fileValidator (_: FormControl): { [ s: string ]: boolean } | null {
@@ -72,6 +74,7 @@ export class DownloadedFilesListComponent implements OnInit {
         
         this.http.post(`${this.webServerHost}/uploadFile`, {
             _id: newClientId, 
+            clientLogin: this.login,
             uploadFileMeta: fileMetaJson, 
             uploadFileComment: this.uploadFileForm.value['formFileComment'] as string
         }, { responseType: 'text' }).subscribe({
@@ -81,6 +84,8 @@ export class DownloadedFilesListComponent implements OnInit {
                     case 'PENDING': { this.responseMessage = "Сервер занят. Повторите попытку позже."; break; }
                     case 'FILEEXISTS': { this.responseMessage = "Файл с таким именем уже загружен."; break; }
                     case 'MAXCOUNT': { this.responseMessage = "Загружено максимальное количество файлов."; break; }
+                    case 'MAXSIZE': { this.responseMessage = "Максимальный размер файла - 100 МБ."; break; }
+                    case 'MAXNAMELENGTH': { this.responseMessage = "Имя файла должно содержать как минимум 4 символа."; break; }
                 }
             },
             error: () => this.responseMessage = "Что-то пошло не так. Попробуйте ещё раз."

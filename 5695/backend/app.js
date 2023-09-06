@@ -35,27 +35,27 @@ const logFN = join(__dirname, '_server.log');
 const filesInfoWithCommentsFN = join(__dirname, 'filesInfoWithComments.json');
 const filesInfoWithCommentsFolderFN = join(__dirname, 'uploadedFiles');
 
-let clients = [];
+let webSocketClients = [];
 
 const socketServer = new WebSocketServer({ port: port2 }); 
 
 socketServer.on('connection', (connection, request) => {
-    const clientId = parseFloat(request.url.substring(2));
+    const webSocketClientId = parseFloat(request.url.substring(2));
 
-    if (isNaN(clientId)) connection.terminate();
+    if (isNaN(webSocketClientId)) connection.terminate();
 
-    const currentClient = clients.find(client => client._id === clientId);
+    const currentClient = webSocketClients.find(client => client._id === webSocketClientId);
 
     if (!currentClient) connection.terminate();
 
     currentClient.connection = connection;
 
-    logLineAsync(logFN, `[${port2}] New connection established. ClientId --- ${clientId}`);
+    logLineAsync(logFN, `[${port2}] New connection established. WebSocketClientId --- ${webSocketClientId}`);
 
     let timer = 0;
         
     connection.on('message', async (data, isBinary) => {
-        if (data.toString() === "KEEP_ME_ALIVE") clients.forEach(client => client._id === clientId ? client.lastkeepalive = Date.now() : null);
+        if (data.toString() === "KEEP_ME_ALIVE") webSocketClients.forEach(client => client._id === webSocketClientId ? client.lastkeepalive = Date.now() : null);
         else {
             if (isBinary) {
                 const fileData = data;
@@ -67,7 +67,7 @@ socketServer.on('connection', (connection, request) => {
                 currentClient.activeWriteStream.write(fileData, async () => {
                     const message = createMessage('uploadFile', 'SUCCESS', { uploadedSize: currentClient.uploadedSize, fileMetaSize: currentClient.fileMetaSize });
 
-                    await logLineAsync(logFN, `[${port2}] ClientId --- ${clientId}. Chunk ${currentClient.currentChunkNumber} writed, size --> ${fileData.length}`);
+                    await logLineAsync(logFN, `[${port2}] WebSocketClientId --- ${webSocketClientId}. Chunk ${currentClient.currentChunkNumber} writed, size --> ${fileData.length}`);
 
                     currentClient.currentChunkNumber += 1;
 
@@ -79,18 +79,18 @@ socketServer.on('connection', (connection, request) => {
     });
 
     connection.on('error', async () => {
-        await fsPromises.unlink(join(__dirname, 'uploadedFiles', currentClient.fileMetaName));
+        await fsPromises.unlink(join(__dirname, 'uploadedFiles', currentClient.login, currentClient.fileMetaName));
 
-        clients = clients.filter(client => client._id !== currentClient._id);
+        webSocketClients = webSocketClients.filter(client => client._id !== currentClient._id);
     });
 
     setInterval(() => {
         timer++;
     
         try {
-            clients.forEach(client => {
+            webSocketClients.forEach(client => {
                 if ((Date.now() - client.lastkeepalive) > 12000) {
-                    fsPromises.unlink(join(__dirname, 'uploadedFiles', currentClient.fileMetaName)).then(() => {
+                    fsPromises.unlink(join(__dirname, 'uploadedFiles', currentClient.login, currentClient.fileMetaName)).then(() => {
                         client.connection.terminate();
     
                         client.connection = null;
@@ -104,7 +104,7 @@ socketServer.on('connection', (connection, request) => {
                 }
             });
     
-            clients = clients.filter(client => client.connection);
+            webSocketClients = webSocketClients.filter(client => client.connection);
         }
 
         catch (error) { console.error(error);
@@ -150,7 +150,9 @@ webserver.post('/sign/:op', async (req, res) => {
 
         
     } else {
-        if (!client) {
+        const passwordHash = client.password;
+
+        if (!client || !(await bcrypt.compare(password, passwordHash))) {
             res.status(401).end();
 
             return;
@@ -161,27 +163,31 @@ webserver.post('/sign/:op', async (req, res) => {
 });
 
 webserver.post('/uploadFile', async (req, res) => {
-    const clientId = req.body._id;
+    const webSocketClientId = req.body._id;
+    const clientLogin = req.body.clientLogin;
+
     const fileMeta = JSON.parse(req.body.uploadFileMeta);
     const comment = req.body.uploadFileComment;
 
-    if (typeof clientId !== 'number' || clientId < 0 || clientId > 1 
+    const client = await sequelize.models.Client.findOne({ login: clientLogin });
+    const clientLoginPattern = /^[a-zA-Z](.[a-zA-Z0-9_-]*)$/;
+
+    if (typeof webSocketClientId !== 'number' || webSocketClientId < 0 || webSocketClientId > 1
+        || !client || typeof clientLogin !== 'string' || clientLogin === '' || !clientLoginPattern.test(clientLogin)
         || typeof comment !== 'string' || comment === ''
-        || fileMeta.name.length < 4
-        || fileMeta.size > 104857600
     ) {
         res.status(400).end();
 
         return;
     }
 
-    const newFilePath = join(__dirname, 'uploadedFiles', fileMeta.name);
+    const newFilePath = join(__dirname, 'uploadedFiles', clientLogin, fileMeta.name);
 
-    const activeUploadClient = clients.some(client => client._id === clientId);
+    const activeUploadClient = webSocketClients.some(client => client._id === webSocketClientId);
 
     let activeUploadsClientNumber = 0;
 
-    clients.forEach(client => client.activeWriteStream ? activeUploadsClientNumber += 1 : null);
+    webSocketClients.forEach(client => client.activeWriteStream ? activeUploadsClientNumber += 1 : null);
 
     if (activeUploadClient) {
         res.status(400).end();
@@ -211,6 +217,18 @@ webserver.post('/uploadFile', async (req, res) => {
         return;
     }
 
+    if (fileMeta.size > 104857600) {
+        res.send('MAXSIZE').end();
+
+        return;
+    }
+
+    if (fileMeta.name.length < 4) {
+        res.send('MAXNAMELENGTH').end();
+
+        return;
+    }
+
     res.send('START').end();
 
     let currentChunkNumber = 0;
@@ -221,9 +239,9 @@ webserver.post('/uploadFile', async (req, res) => {
     writeStream.on('error', async () => {
         await fsPromises.unlink(newFilePath);
 
-        await logLineAsync(logFN, `[${port2}] ClientId --- ${clientId}. Stream error`);
+        await logLineAsync(logFN, `[${port2}] WebSocketClientId --- ${webSocketClientId}. Stream error`);
 
-        const currentClient = clients.find(client => client._id === clientId);
+        const currentClient = webSocketClients.find(client => client._id === webSocketClientId);
 
         const message = createMessage('uploadFile', 'ERROR', { uploadedSize: currentClient.uploadedSize, fileMetaSize: fileMeta.size });
 
@@ -231,7 +249,7 @@ webserver.post('/uploadFile', async (req, res) => {
     });
 
     writeStream.on('finish', async () => {
-        const currentClient = clients.find(client => client._id === clientId);
+        const currentClient = webSocketClients.find(client => client._id === webSocketClientId);
 
         const message = createMessage('uploadFile', 'FINISH', { uploadedSize: currentClient.uploadedSize, fileMetaSize: fileMeta.size });
 
@@ -242,7 +260,7 @@ webserver.post('/uploadFile', async (req, res) => {
 
         await appendFileInfoWithComments(fsPromises, filesInfoWithCommentsFN, newFileInfo);
 
-        await logLineAsync(logFN, `[${port2}] ClientId --- ${clientId}. All chunks writed, overall size --> ${currentClient.uploadedSize}. File ${fileMeta.name} uploaded`);
+        await logLineAsync(logFN, `[${port2}] WebSocketClientId --- ${webSocketClientId}. All chunks writed, overall size --> ${currentClient.uploadedSize}. File ${fileMeta.name} uploaded`);
 
         currentClient.connection.send(JSON.stringify(message));
 
@@ -250,21 +268,40 @@ webserver.post('/uploadFile', async (req, res) => {
     
         currentClient.connection = null;
 
-        clients = clients.filter((client => client.connection));
+        webSocketClients = webSocketClients.filter((client => client.connection));
     });
 
-    clients.push({ _id: clientId, activeWriteStream: writeStream, currentChunkNumber, uploadedSize, fileMetaName: fileMeta.name, fileMetaSize: fileMeta.size, comment, lastkeepalive: Date.now() });
+    webSocketClients.push({ 
+        _id: webSocketClientId, 
+        login: clientLogin,
+        activeWriteStream: writeStream, 
+        currentChunkNumber, uploadedSize, 
+        fileMetaName: fileMeta.name, 
+        fileMetaSize: fileMeta.size, 
+        comment, 
+        lastkeepalive: Date.now()
+    });
 
     return;
 });
 
-webserver.get('/getFilesInfo', async (_, res) => {
+webserver.get('/getFilesInfo/:login', async (req, res) => {
+    const clientLogin = req.params.login;
+
+    const client = await sequelize.models.Client.findOne({ login: clientLogin });
+
+    if (!client) {
+        res.status(400).end();
+
+        return;
+    }
+
     try {
         await fsPromises.access(filesInfoWithCommentsFN, fsPromises.constants.F_OK);
     }
 
     catch {
-        fsPromises.writeFile(filesInfoWithCommentsFN, JSON.stringify([]));
+        await fsPromises.writeFile(filesInfoWithCommentsFN, JSON.stringify([]));
 
         res.send([]).end();
 
@@ -280,10 +317,19 @@ webserver.get('/getFilesInfo', async (_, res) => {
     readStream.on('end', () => res.send(JSON.parse(filesInfoWithComments)).end());
 });
 
-webserver.get('/getFile/:fileName', async (req, res) => {
+webserver.get('/getFile/:fileName/:login', async (req, res) => {
     const fileName = req.params.fileName.substring(1);
+    const clientLogin = req.params.login;
 
-    const filePath = join(filesInfoWithCommentsFolderFN, fileName);
+    const client = await sequelize.models.Client.findOne({ login: clientLogin });
+
+    if (!client) {
+        res.status(400).end();
+
+        return;
+    }
+
+    const filePath = join(filesInfoWithCommentsFolderFN, clientLogin, fileName);
 
     try {
         await fsPromises.access(filePath, fsPromises.constants.F_OK);

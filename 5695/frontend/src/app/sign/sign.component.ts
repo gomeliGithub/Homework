@@ -26,6 +26,8 @@ export class SignComponent implements OnInit {
     @ViewChild('signError', { read: ViewContainerRef, static: false })
     private signErrorViewRef: ViewContainerRef;
 
+    public signError: boolean = false;
+
     signForm: FormGroup = new FormGroup({
         "clientLogin": new FormControl("", Validators.required),
         "clientPassword": new FormControl("", Validators.required),
@@ -43,8 +45,16 @@ export class SignComponent implements OnInit {
         const signErrorElement: HTMLSpanElement = this.signErrorViewRef.element.nativeElement;
 
         this.http.post(`${this._webServerHost}/sign:${this.op}`, signData).pipe(map(data => data as ISignResponseData)).subscribe({
-            next: data => this.op === 'in' ? this.router.navigate([ '/fileStorage', data.login ]) : this.router.navigate(['']),
-            error: () => signErrorElement.textContent = "Что-то пошло не так, попробуйте ещё раз."
+            next: data => {
+                this.signError = false;
+
+                this.op === 'in' ? this.router.navigate([ '/fileStorage', data.login ]) : this.router.navigate(['']);
+            },
+            error: () => {
+                this.signError = true;
+
+                signErrorElement.textContent = "Что-то пошло не так, попробуйте ещё раз.";
+            }
         });
     }
 }

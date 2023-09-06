@@ -82,6 +82,7 @@ export class WebSocketService {
 
     public sendFile (slicedFileData: ArrayBuffer[], chunkNumber: number): void {
         if (!this._slicedFileData || this._slicedFileData.length === 0) this._slicedFileData = slicedFileData;
+        
         this._currentChunkNumber = chunkNumber;
 
         this.send(slicedFileData[chunkNumber]);

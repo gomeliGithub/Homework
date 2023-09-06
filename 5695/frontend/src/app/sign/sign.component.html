@@ -31,7 +31,7 @@
             Ещё нет аккаунта?
             <a href="/signUp" class="link-offset-2 link-offset-3-hover link-underline link-underline-opacity-0 link-underline-opacity-75-hover"> (Регистрация)</a>
         </span>
-        <div class="alert alert-danger text-center">
+        <div *ngIf="signError" class="alert alert-danger text-center">
             <span class="text-danger" #signError></span>
         </div>
     </div>
