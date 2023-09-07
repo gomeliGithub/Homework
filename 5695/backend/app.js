@@ -13,6 +13,8 @@ import logLineAsync from './utils/logLineAsync.js';
 import dbConnection from './dbConnection.js';
 import defineModels from './models.js';
 
+import sendEmail from './sendMail.js';
+
 import createMessage from './createMessage.js';
 import appendFileInfoWithComments from './appendFileInfoWithComments.js';
 
@@ -118,7 +120,7 @@ logLineAsync(logFN, "Socket server running on port " + port2);
 webserver.post('/sign/:op', async (req, res) => {
     const op = req.params['op'];
 
-    if (!op || op !== ('in' || 'up')) {
+    if (!op || op !== 'in' || op !== 'up') {
         res.status(400).end();
 
         return;
@@ -143,23 +145,52 @@ webserver.post('/sign/:op', async (req, res) => {
 
         const passwordHash = await bcrypt.hash(password, 10);
 
-        await client.create({ login, password: passwordHash, email });
+        await client.create({ login, password: passwordHash, email, verified: false });
 
+        try {
+            const mailBody = `Спасибо за регистрацию. Для завершения регистрации перейдите по ссылке.\n
+                <a href="/signUpVerify/:${login}">Подтвердить аккаунт</a>
+            `;
 
-        //////////////////////////// email ////////////////////////////
+            await sendEmail('irina01041971@mail.ru', 'Подтверждение аккаунта', mailBody); // email
 
-        
+            await logLineAsync(logFN, `Письмо отправлено клиенту --- ${login}`);
+        } catch (error) {
+            await logLineAsync(logFN, `При отправке письма клиенту --- ${login} произошла ошибка - ${error}`);
+        }
+
+        await logLineAsync(logFN, `Клиент ${login} зарегистрирован`);
+
+        res.status(200).end();
     } else {
         const passwordHash = client.password;
 
-        if (!client || !(await bcrypt.compare(password, passwordHash))) {
+        if (!client || !(await bcrypt.compare(password, passwordHash)) || !client.verified) {
             res.status(401).end();
 
             return;
         }
 
+        await logLineAsync(logFN, `Клиент ${login} вошел в систему`);
+
         res.send({ login }).end();
     }
+});
+
+webserver.get('/signUpVerify/:login', async (req, res) => {
+    const login = req.params.login;
+
+    const client = await sequelize.models.Client.findOne({ login });
+
+    if (client) {
+        res.status(401).end();
+
+        return;
+    }
+
+    await client.update({ verified: true}, { where: { login }});
+
+    res.redirect(301, '/');
 });
 
 webserver.post('/uploadFile', async (req, res) => {
@@ -209,9 +240,9 @@ webserver.post('/uploadFile', async (req, res) => {
         return;
     } catch {}
 
-    const uploadedFilesNumber = (await fsPromises.readdir(filesInfoWithCommentsFolderFN)).length;
+    const uploadedFilesNumber = (await fsPromises.readdir(join(filesInfoWithCommentsFolderFN, clientLogin))).length;
 
-    if (uploadedFilesNumber === 15) {
+    if (uploadedFilesNumber === 10) {
         res.send('MAXCOUNT').end();
 
         return;
