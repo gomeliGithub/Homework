@@ -162,10 +162,10 @@ webserver.post('/sign/:op', async (req, res) => {
         await logLineAsync(logFN, `[${port}] Клиент --- ${clientLogin} --- зарегистрирован`);
 
         try {
-            const apiOrigin = `${(new URL(req.url, `http://${req.headers.host}`)).origin}:${port.toString()}`;
+            const apiURLOrigin = `${(new URL(req.url, `http://${req.headers.host}`)).origin}:${port.toString()}`;
 
             const mailBody = `Спасибо за регистрацию. Для завершения регистрации перейдите по ссылке.
-                <a href="${apiOrigin}/signUpVerify/:${clientLogin}">Подтвердить аккаунт</a>
+                <a href="${apiURLOrigin}/signUpVerify/:${clientLogin}">Подтвердить аккаунт</a>
             `;
 
             await sendEmail(clientEmail, 'Подтверждение аккаунта', mailBody);
