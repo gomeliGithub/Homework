@@ -170,7 +170,7 @@ webserver.post('/sign/:op', async (req, res) => {
 
             await sendEmail(clientEmail, 'Подтверждение аккаунта', mailBody);
 
-            await logLineAsync(logFN, `[${port}] Письмо отправлено клиенту --- ${clientLogin}`);
+            await logLineAsync(logFN, `[${port}] Письмо отправлено клиенту --- ${clientLogin} ---`);
         } catch (error) {
             await logLineAsync(logFN, `[${port}] При отправке письма клиенту --- ${clientLogin} --- произошла ошибка - ${error}`);
 
