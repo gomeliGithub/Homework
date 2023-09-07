@@ -6,8 +6,7 @@ export default async function defineModels (sequelize) {
     Client.init({
         login: {
             type: DataTypes.STRING,
-            allowNull: false,
-            autoIncrement: true
+            allowNull: false
         },
 
         password: {
@@ -26,7 +25,8 @@ export default async function defineModels (sequelize) {
         }
     },  {
         sequelize,
-        modelName: 'Client'
+        modelName: 'Client',
+        timestamps: false
     });
 
     return { Client };
