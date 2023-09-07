@@ -25,8 +25,10 @@ const __dirname = dirname(__filename);
 
 const webserver = express();
 
+const origin = process.argv[2] === '--prod' ? 'http://test.expapp.online' : 'http://localhost:4200';
+
 webserver.use(cors({
-    origin: 'http://localhost:4200' // 'http://test.expapp.online'
+    origin
 }));
 
 webserver.use(json());
@@ -162,10 +164,10 @@ webserver.post('/sign/:op', async (req, res) => {
         await logLineAsync(logFN, `[${port}] Клиент --- ${clientLogin} --- зарегистрирован`);
 
         try {
-            const apiURLOrigin = `${(new URL(req.url, `http://${req.headers.host}`)).origin}:${port.toString()}`;
+            const apiURLOrigin = `${(new URL(req.url, `http://${req.headers.host}`)).origin}:${port.toString()}`; 
 
             const mailBody = `Спасибо за регистрацию. Для завершения регистрации перейдите по ссылке.
-                <a href="${apiURLOrigin}/signUpVerify/:${clientLogin}">Подтвердить аккаунт</a>
+                <a href=${apiURLOrigin}/signUpVerify/:${clientLogin}>Подтвердить аккаунт</a>
             `;
 
             await sendEmail(clientEmail, 'Подтверждение аккаунта', mailBody);
@@ -212,7 +214,7 @@ webserver.get('/signUpVerify/:login', async (req, res) => {
 
     await logLineAsync(logFN, `[${port}] Аккаунт клиента --- ${login} --- подтвержден`);
 
-    res.redirect(301, 'http://localhost:4200');
+    res.redirect(301, origin);
 });
 
 webserver.get('/checkSessionExists/:login', async (req, res) => {
