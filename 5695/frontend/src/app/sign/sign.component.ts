@@ -28,19 +28,19 @@ export class SignComponent {
 
     public signError: boolean = false;
 
+    public op: string = this.activateRoute.snapshot.params['op'];
+
     signForm: FormGroup = new FormGroup({
         "clientLogin": new FormControl("", Validators.required),
         "clientPassword": new FormControl("", Validators.required),
-        "clientEmail": new FormControl("", [ Validators.required, Validators.email ])
+        "clientEmail": new FormControl("", [ Validators.email ])
     });
-
-    public op: string = this.activateRoute.snapshot.params['op'];
 
     public sign (): void {
         const signData: ISignData = this.signForm.value;
         const signErrorElement: HTMLSpanElement = this.signErrorViewRef.element.nativeElement;
 
-        this.http.post(`${this._webServerHost}/sign:${this.op}`, signData).pipe(map(data => data as ISignResponseData)).subscribe({
+        this.http.post(`${this._webServerHost}/sign/:${this.op}`, signData).pipe(map(data => data as ISignResponseData)).subscribe({
             next: data => {
                 this.signError = false;
 
@@ -49,7 +49,7 @@ export class SignComponent {
             error: () => {
                 this.signError = true;
 
-                signErrorElement.textContent = "Что-то пошло не так, попробуйте ещё раз.";
+                signErrorElement.textContent = this.op === 'in' ? "Такого пользователя не существует, либо неверный пароль, либо данный пользователь не подтверждён." : 'Что-то пошло не так. Попробуйте ещё раз.';
             }
         });
     }

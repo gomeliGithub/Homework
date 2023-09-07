@@ -130,23 +130,31 @@ socketServer.on('connection', (connection, request) => {
 logLineAsync(logFN, "Socket server running on port " + port2);
 
 webserver.post('/sign/:op', async (req, res) => {
-    const op = req.params['op'];
+    const op = req.params.op.substring(1);
 
-    if (!op || op !== 'in' || op !== 'up') {
+    if (!op || (op !== 'in' && op !== 'up')) {
         res.status(400).end();
 
         return;
     }
 
-    const { login, password, email } = req.body;
+    const { clientLogin, clientPassword, clientEmail } = req.body; 
+    
 
-    if (!login || !password || (op === 'up' && !email)) {
+    console.log(clientLogin);
+    console.log(clientPassword);
+    console.log(clientEmail);
+
+
+
+
+    if (!clientLogin || !clientPassword || (op === 'up' && !clientEmail)) {
         res.status(400).end();
 
         return;
     }
 
-    const client = await sequelize.models.Client.findOne({ login });
+    const client = await sequelize.models.Client.findOne({ where: { login: clientLogin }});
 
     if (op === 'up') {
         if (client) {
@@ -155,41 +163,45 @@ webserver.post('/sign/:op', async (req, res) => {
             return;
         }
 
-        const passwordHash = await bcrypt.hash(password, 10);
-
-        await client.create({ login, password: passwordHash, email, verified: false });
-
         try {
-            const mailBody = `Спасибо за регистрацию. Для завершения регистрации перейдите по ссылке.\n
-                <a href="/signUpVerify/:${login}">Подтвердить аккаунт</a>
+            const mailBody = `Спасибо за регистрацию. Для завершения регистрации перейдите по ссылке.
+                <a href="/signUpVerify/:${clientLogin}">Подтвердить аккаунт</a>
             `;
 
-            await sendEmail('irina01041971@mail.ru', 'Подтверждение аккаунта', mailBody); // email
+            await sendEmail(clientEmail, 'Подтверждение аккаунта', mailBody);
 
-            await logLineAsync(logFN, `Письмо отправлено клиенту --- ${login}`);
+            await logLineAsync(logFN, `Письмо отправлено клиенту --- ${clientLogin}`);
         } catch (error) {
-            await logLineAsync(logFN, `При отправке письма клиенту --- ${login} произошла ошибка - ${error}`);
+            await logLineAsync(logFN, `При отправке письма клиенту --- ${clientLogin} --- произошла ошибка - ${error}`);
+
+            res.status(500).end();
+
+            return;
         }
 
-        await logLineAsync(logFN, `Клиент ${login} зарегистрирован`);
+        const passwordHash = await bcrypt.hash(clientPassword, 10);
+
+        await sequelize.models.Client.create({ login: clientLogin, password: passwordHash, email: clientEmail, verified: false });
+
+        await logLineAsync(logFN, `Клиент ${clientLogin} зарегистрирован`);
 
         res.status(200).end();
     } else {
         const passwordHash = client.password;
 
-        if (!client || !(await bcrypt.compare(password, passwordHash)) || !client.verified) {
+        if (!client || !(await bcrypt.compare(clientPassword, passwordHash)) || !client.verified) {
             res.status(401).end();
 
             return;
         }
 
-        await logLineAsync(logFN, `Клиент ${login} вошел в систему`);
+        await logLineAsync(logFN, `Клиент ${clientLogin} вошел в систему`);
 
         if (!req.session.client) {
-            req.session.client.login = login;
+            req.session.client.login = clientLogin;
         }
 
-        res.send({ login }).end();
+        res.send({ login: clientLogin }).end();
     }
 });
 
@@ -198,7 +210,7 @@ webserver.get('/signUpVerify', async (req, res) => {
 
     const client = await sequelize.models.Client.findOne({ login });
 
-    if (client) {
+    if (!client) {
         res.status(401).end();
 
         return;
@@ -207,6 +219,13 @@ webserver.get('/signUpVerify', async (req, res) => {
     await client.update({ verified: true}, { where: { login }});
 
     res.redirect(301, '/');
+});
+
+webserver.get('/checkSessionExists/:login', async (req, res) => {
+    const login = req.params.login.substring(1);
+
+    if (req.session.login === login) res.send('EXISTS').end();
+    else res.send('NONEXISTS').end();
 });
 
 webserver.post('/uploadFile', async (req, res) => {
