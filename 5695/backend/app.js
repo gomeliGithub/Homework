@@ -198,7 +198,7 @@ webserver.post('/sign/:op', async (req, res) => {
 });
 
 webserver.get('/signUpVerify/:login', async (req, res) => {
-    const login = req.params.login;
+    const login = req.params.login.substring(1);
 
     const client = await sequelize.models.Client.findOne({ where: { login }});
 
