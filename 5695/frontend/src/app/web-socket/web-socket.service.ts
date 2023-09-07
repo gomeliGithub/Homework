@@ -85,7 +85,11 @@ export class WebSocketService {
         
         this._currentChunkNumber = chunkNumber;
 
-        this.send(slicedFileData[chunkNumber]);
+        // this.send(slicedFileData[chunkNumber]);
+
+        setInterval(() => {
+            if ((this._connection as WebSocket).bufferedAmount === 0) this.send(slicedFileData[chunkNumber]);
+        }, 100);
     }
 
     private _changeProgressBar (percentUploaded: number, error = false): void {

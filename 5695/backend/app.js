@@ -80,6 +80,14 @@ socketServer.on('connection', (connection, request) => {
         }
     });
 
+    connection.on('close', async () => {
+        if (currentClient.uploadedSize !== currentClient.fileMetaSize) { 
+            await fsPromises.unlink(join(__dirname, 'uploadedFiles', currentClient.login, currentClient.fileMetaName));
+
+            webSocketClients = webSocketClients.filter(client => client._id !== currentClient._id);
+        }
+    });
+
     connection.on('error', async () => {
         await fsPromises.unlink(join(__dirname, 'uploadedFiles', currentClient.login, currentClient.fileMetaName));
 
@@ -294,9 +302,7 @@ webserver.post('/uploadFile', async (req, res) => {
         await logLineAsync(logFN, `[${port2}] WebSocketClientId --- ${webSocketClientId}. All chunks writed, overall size --> ${currentClient.uploadedSize}. File ${fileMeta.name} uploaded`);
 
         currentClient.connection.send(JSON.stringify(message));
-
         currentClient.connection.terminate();
-    
         currentClient.connection = null;
 
         webSocketClients = webSocketClients.filter((client => client.connection));
@@ -306,9 +312,10 @@ webserver.post('/uploadFile', async (req, res) => {
         _id: webSocketClientId, 
         login: clientLogin,
         activeWriteStream: writeStream, 
-        currentChunkNumber, uploadedSize, 
+        currentChunkNumber, 
+        uploadedSize, 
         fileMetaName: fileMeta.name, 
-        fileMetaSize: fileMeta.size, 
+        fileMetaSize: fileMeta.size,
         comment, 
         lastkeepalive: Date.now()
     });
