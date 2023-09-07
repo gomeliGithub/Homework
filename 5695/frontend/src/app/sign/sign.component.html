@@ -29,7 +29,8 @@
         </button>
         <span *ngIf="op === 'in'" class="d-block">
             Ещё нет аккаунта?
-            <a href="/signUp" class="link-offset-2 link-offset-3-hover link-underline link-underline-opacity-0 link-underline-opacity-75-hover"> (Регистрация)</a>
+            <a href="/signUp" routerLinkActive="active" class="link-offset-2 link-offset-3-hover link-underline link-underline-opacity-0 link-underline-opacity-75-hover"> (Регистрация)</a>
+            <!-- routerLink="/sign/{{op}}" -->
         </span>
         <div class="alert alert-danger text-center"> <!-- *ngIf="signError" -->
             <span class="text-danger" #signError></span>

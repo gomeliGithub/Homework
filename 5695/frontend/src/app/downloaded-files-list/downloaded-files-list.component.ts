@@ -25,7 +25,7 @@ export class DownloadedFilesListComponent implements OnInit {
         private readonly titleService: Title
     ) { }
 
-    public login: string = this.activateRoute.snapshot.params['login'];
+    public login: string = this.activateRoute.snapshot.paramMap.get('login') as string;
 
     public filesInfo: Observable<IFileInfoWithComments[]> = this.downloadedFilesListComponentService.getFilesInfo(this.login).pipe(map(data => this.filesInfoWithComments = data));
     public filesInfoWithComments: IFileInfoWithComments[];

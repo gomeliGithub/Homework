@@ -28,7 +28,7 @@ export class SignComponent {
 
     public signError: boolean = false;
 
-    public op: string = this.activateRoute.snapshot.params['op'];
+    public op: string = this.activateRoute.snapshot.paramMap.get('op') as string;
 
     signForm: FormGroup = new FormGroup({
         "clientLogin": new FormControl("", Validators.required),

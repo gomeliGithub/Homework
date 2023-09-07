@@ -24,6 +24,7 @@ import { SignComponent } from './sign/sign.component';
         HttpClientModule
     ],
     providers: [AppService],
+    exports: [AppRoutingModule],
     bootstrap: [AppComponent]
 })
 export class AppModule { }
