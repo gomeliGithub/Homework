@@ -155,6 +155,12 @@ webserver.post('/sign/:op', async (req, res) => {
             return;
         }
 
+        const passwordHash = await bcrypt.hash(clientPassword, 10);
+
+        await sequelize.models.Client.create({ login: clientLogin, password: passwordHash, email: clientEmail, verified: false });
+
+        await logLineAsync(logFN, `[${port}] Клиент --- ${clientLogin} --- зарегистрирован`);
+
         try {
             const apiOrigin = `${(new URL(req.url, `http://${req.headers.host}`)).origin}:${port.toString()}`;
 
@@ -172,12 +178,6 @@ webserver.post('/sign/:op', async (req, res) => {
 
             return;
         }
-
-        const passwordHash = await bcrypt.hash(clientPassword, 10);
-
-        await sequelize.models.Client.create({ login: clientLogin, password: passwordHash, email: clientEmail, verified: false });
-
-        await logLineAsync(logFN, `[${port}] Клиент --- ${clientLogin} --- зарегистрирован`);
 
         res.status(200).end();
     } else {
