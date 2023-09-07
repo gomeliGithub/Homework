@@ -1,6 +1,6 @@
 import nodemailer from 'nodemailer';
 
-import removeTags from '../../utils/removeTags';
+import removeTags from '../../utils/removeTags.js';
 
 import { mailer_transportConfig, mailer_fromEmail } from './mail_credentials.js';
 
