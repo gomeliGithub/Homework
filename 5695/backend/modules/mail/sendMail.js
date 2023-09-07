@@ -4,7 +4,7 @@ import removeTags from '../../utils/removeTags.js';
 
 import { mailer_transportConfig, mailer_fromEmail } from './mail_credentials.js';
 
-export default function sendEmail (recipientEmail, subject, body) {
+export default function sendEmail (recipientEmail, subject, body) { console.log(mailer_transportConfig);
     return new Promise((resolve, reject) => {
         let transporter = nodemailer.createTransport(mailer_transportConfig);
 

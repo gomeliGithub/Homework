@@ -44,7 +44,7 @@ export class SignComponent {
             next: data => {
                 this.signError = false;
 
-                this.op === 'in' ? this.router.navigate([ '/fileStorage', data.login ]) : this.router.navigate(['']);
+                this.op === 'in' ? this.router.navigate([ '/fileStorage', data.login ]) : this.router.navigate(['/']);
             },
             error: () => {
                 this.signError = true;

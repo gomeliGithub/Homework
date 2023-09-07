@@ -122,7 +122,7 @@ socketServer.on('connection', (connection, request) => {
         }
 
         catch (error) { console.error(error);
-            logLineAsync(logFN, `[${port2}] Server error`);
+            logLineAsync(logFN, `[${port2}] WebSocketServer error`);
         }
     }, 3000);
 });
@@ -139,14 +139,6 @@ webserver.post('/sign/:op', async (req, res) => {
     }
 
     const { clientLogin, clientPassword, clientEmail } = req.body; 
-    
-
-    console.log(clientLogin);
-    console.log(clientPassword);
-    console.log(clientEmail);
-
-
-
 
     if (!clientLogin || !clientPassword || (op === 'up' && !clientEmail)) {
         res.status(400).end();
@@ -164,15 +156,17 @@ webserver.post('/sign/:op', async (req, res) => {
         }
 
         try {
+            const apiOrigin = (new URL(req.url, `http://${req.headers.host}`)).origin;
+
             const mailBody = `Спасибо за регистрацию. Для завершения регистрации перейдите по ссылке.
-                <a href="/signUpVerify/:${clientLogin}">Подтвердить аккаунт</a>
+                <a href="${apiOrigin}:${port}/signUpVerify/:${clientLogin}">Подтвердить аккаунт</a>
             `;
 
             await sendEmail(clientEmail, 'Подтверждение аккаунта', mailBody);
 
-            await logLineAsync(logFN, `Письмо отправлено клиенту --- ${clientLogin}`);
+            await logLineAsync(logFN, `[${port}] Письмо отправлено клиенту --- ${clientLogin}`);
         } catch (error) {
-            await logLineAsync(logFN, `При отправке письма клиенту --- ${clientLogin} --- произошла ошибка - ${error}`);
+            await logLineAsync(logFN, `[${port}] При отправке письма клиенту --- ${clientLogin} --- произошла ошибка - ${error}`);
 
             res.status(500).end();
 
@@ -183,19 +177,17 @@ webserver.post('/sign/:op', async (req, res) => {
 
         await sequelize.models.Client.create({ login: clientLogin, password: passwordHash, email: clientEmail, verified: false });
 
-        await logLineAsync(logFN, `Клиент ${clientLogin} зарегистрирован`);
+        await logLineAsync(logFN, `[${port}] Клиент ${clientLogin} зарегистрирован`);
 
         res.status(200).end();
     } else {
-        const passwordHash = client.password;
-
-        if (!client || !(await bcrypt.compare(clientPassword, passwordHash)) || !client.verified) {
+        if (!client || !(await bcrypt.compare(clientPassword, client.password)) || !client.verified) {
             res.status(401).end();
 
             return;
         }
 
-        await logLineAsync(logFN, `Клиент ${clientLogin} вошел в систему`);
+        await logLineAsync(logFN, `[${port}] Клиент ${clientLogin} вошел в систему`);
 
         if (!req.session.client) {
             req.session.client.login = clientLogin;
