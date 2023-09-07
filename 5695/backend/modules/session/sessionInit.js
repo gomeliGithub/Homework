@@ -27,7 +27,7 @@ export default function sessionInit () {
     const secret = crypto.randomBytes(40).toString();
 
     return session({
-        secret: secret, // 'keyboard cat',
+        secret: secret,
         resave: false,
         saveUninitialized: true,
         cookie: { secure: false },
