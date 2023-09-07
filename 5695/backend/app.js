@@ -210,6 +210,8 @@ webserver.get('/signUpVerify', async (req, res) => {
 
     await client.update({ verified: true}, { where: { login }});
 
+    await logLineAsync(logFN, `[${port}] Аккаунт клиента ${login} подтвержден`);
+
     res.redirect(301, '/');
 });
 
