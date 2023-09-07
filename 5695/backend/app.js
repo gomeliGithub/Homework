@@ -10,13 +10,13 @@ import 'dotenv/config'
 
 import logLineAsync from './utils/logLineAsync.js';
 
-import dbConnection from './dbConnection.js';
-import defineModels from './models.js';
+import dbConnection from './modules/db/dbConnection.js';
+import defineModels from './modules/db/models.js';
 
-import sendEmail from './sendMail.js';
+import sendEmail from './modules/mail/sendMail.js';
 
-import createMessage from './createMessage.js';
-import appendFileInfoWithComments from './appendFileInfoWithComments.js';
+import createMessage from './modules/common/createMessage.js';
+import appendFileInfoWithComments from './modules/common/appendFileInfoWithComments.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);

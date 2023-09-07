@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ViewContainerRef } from '@angular/core';
+import { Component, ViewChild, ViewContainerRef } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router, ActivatedRoute } from '@angular/router';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
@@ -14,7 +14,7 @@ import { ISignData, ISignResponseData } from '../../@types/global';
     templateUrl: './sign.component.html',
     styleUrls: ['./sign.component.css']
 })
-export class SignComponent implements OnInit {
+export class SignComponent {
     constructor (
         private readonly http: HttpClient,
         private readonly router: Router,
@@ -35,10 +35,6 @@ export class SignComponent implements OnInit {
     });
 
     public op: string = this.activateRoute.snapshot.params['op'];
-
-    ngOnInit(): void { console.log(this.activateRoute.snapshot.params);
-        
-    }
 
     public sign (): void {
         const signData: ISignData = this.signForm.value;
