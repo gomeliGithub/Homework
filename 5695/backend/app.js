@@ -156,10 +156,10 @@ webserver.post('/sign/:op', async (req, res) => {
         }
 
         try {
-            const apiOrigin = (new URL(req.url, `http://${req.headers.host}`)).origin;
+            const apiOrigin = `${(new URL(req.url, `http://${req.headers.host}`)).origin}: ${port.toString()}`;
 
             const mailBody = `Спасибо за регистрацию. Для завершения регистрации перейдите по ссылке.
-                <a href="${apiOrigin}:${port}/signUpVerify/:${clientLogin}">Подтвердить аккаунт</a>
+                <a href="${apiOrigin}/signUpVerify/:${clientLogin}">Подтвердить аккаунт</a>
             `;
 
             await sendEmail(clientEmail, 'Подтверждение аккаунта', mailBody);
@@ -177,7 +177,7 @@ webserver.post('/sign/:op', async (req, res) => {
 
         await sequelize.models.Client.create({ login: clientLogin, password: passwordHash, email: clientEmail, verified: false });
 
-        await logLineAsync(logFN, `[${port}] Клиент ${clientLogin} зарегистрирован`);
+        await logLineAsync(logFN, `[${port}] Клиент --- ${clientLogin} --- зарегистрирован`);
 
         res.status(200).end();
     } else {
@@ -187,7 +187,7 @@ webserver.post('/sign/:op', async (req, res) => {
             return;
         }
 
-        await logLineAsync(logFN, `[${port}] Клиент ${clientLogin} вошел в систему`);
+        await logLineAsync(logFN, `[${port}] Клиент --- ${clientLogin} --- вошел в систему`);
 
         if (!req.session.client) {
             req.session.client.login = clientLogin;
@@ -210,7 +210,7 @@ webserver.get('/signUpVerify', async (req, res) => {
 
     await client.update({ verified: true}, { where: { login }});
 
-    await logLineAsync(logFN, `[${port}] Аккаунт клиента ${login} подтвержден`);
+    await logLineAsync(logFN, `[${port}] Аккаунт клиента --- ${login} --- подтвержден`);
 
     res.redirect(301, '/');
 });
