@@ -212,7 +212,7 @@ webserver.get('/signUpVerify/:login', async (req, res) => {
 
     await logLineAsync(logFN, `[${port}] Аккаунт клиента --- ${login} --- подтвержден`);
 
-    res.redirect(301, '/');
+    res.redirect(301, 'http://localhost:4200');
 });
 
 webserver.get('/checkSessionExists/:login', async (req, res) => {
