@@ -159,7 +159,7 @@ webserver.post('/sign/:op', async (req, res) => {
             const apiOrigin = `${(new URL(req.url, `http://${req.headers.host}`)).origin}:${port.toString()}`;
 
             const mailBody = `Спасибо за регистрацию. Для завершения регистрации перейдите по ссылке.
-                <a href="${apiOrigin}/signUpVerify">Подтвердить аккаунт</a>
+                <a href="${apiOrigin}/signUpVerify/:${clientLogin}">Подтвердить аккаунт</a>
             `;
 
             await sendEmail(clientEmail, 'Подтверждение аккаунта', mailBody);
@@ -197,10 +197,10 @@ webserver.post('/sign/:op', async (req, res) => {
     }
 });
 
-webserver.get('/signUpVerify', async (req, res) => {
-    const login = req.session.client.login;
+webserver.get('/signUpVerify/:login', async (req, res) => {
+    const login = req.params.login;
 
-    const client = await sequelize.models.Client.findOne({ login });
+    const client = await sequelize.models.Client.findOne({ where: { login }});
 
     if (!client) {
         res.status(401).end();
@@ -229,7 +229,7 @@ webserver.post('/uploadFile', async (req, res) => {
     const fileMeta = JSON.parse(req.body.uploadFileMeta);
     const comment = req.body.uploadFileComment;
 
-    const client = await sequelize.models.Client.findOne({ login: clientLogin });
+    const client = await sequelize.models.Client.findOne({ where: { login: clientLogin }});
     const clientLoginPattern = /^[a-zA-Z](.[a-zA-Z0-9_-]*)$/;
 
     if (typeof webSocketClientId !== 'number' || webSocketClientId < 0 || webSocketClientId > 1
@@ -347,7 +347,7 @@ webserver.post('/uploadFile', async (req, res) => {
 webserver.get('/getFilesInfo', async (req, res) => {
     const clientLogin = req.session.client.login;
 
-    const client = await sequelize.models.Client.findOne({ login: clientLogin });
+    const client = await sequelize.models.Client.findOne({ where: { login: clientLogin }});
 
     if (!client) {
         res.status(400).end();
@@ -380,7 +380,7 @@ webserver.get('/getFile/:fileName', async (req, res) => {
     const fileName = req.params.fileName.substring(1);
     const clientLogin = req.session.client.login;
 
-    const client = await sequelize.models.Client.findOne({ login: clientLogin });
+    const client = await sequelize.models.Client.findOne({ where: { login: clientLogin }});
 
     if (!client) {
         res.status(400).end();
