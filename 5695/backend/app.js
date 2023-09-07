@@ -6,9 +6,11 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import bcrypt from 'bcrypt'
 import cors from 'cors';
-import 'dotenv/config'
+import 'dotenv/config';
 
 import logLineAsync from './utils/logLineAsync.js';
+
+import sessionInit from './modules/session/sessionInit.js';
 
 import dbConnection from './modules/db/dbConnection.js';
 import defineModels from './modules/db/models.js';
@@ -28,6 +30,8 @@ webserver.use(cors({
 }));
 
 webserver.use(json());
+
+webserver.use(sessionInit())
 
 const sequelize = await dbConnection();
 
@@ -181,12 +185,16 @@ webserver.post('/sign/:op', async (req, res) => {
 
         await logLineAsync(logFN, `Клиент ${login} вошел в систему`);
 
+        if (!req.session.client) {
+            req.session.client.login = login;
+        }
+
         res.send({ login }).end();
     }
 });
 
-webserver.get('/signUpVerify/:login', async (req, res) => {
-    const login = req.params.login;
+webserver.get('/signUpVerify', async (req, res) => {
+    const login = req.session.client.login;
 
     const client = await sequelize.models.Client.findOne({ login });
 
@@ -323,8 +331,8 @@ webserver.post('/uploadFile', async (req, res) => {
     return;
 });
 
-webserver.get('/getFilesInfo/:login', async (req, res) => {
-    const clientLogin = req.params.login;
+webserver.get('/getFilesInfo', async (req, res) => {
+    const clientLogin = req.session.client.login;
 
     const client = await sequelize.models.Client.findOne({ login: clientLogin });
 
@@ -355,9 +363,9 @@ webserver.get('/getFilesInfo/:login', async (req, res) => {
     readStream.on('end', () => res.send(JSON.parse(filesInfoWithComments)).end());
 });
 
-webserver.get('/getFile/:fileName/:login', async (req, res) => {
+webserver.get('/getFile/:fileName', async (req, res) => {
     const fileName = req.params.fileName.substring(1);
-    const clientLogin = req.params.login;
+    const clientLogin = req.session.client.login;
 
     const client = await sequelize.models.Client.findOne({ login: clientLogin });
 
