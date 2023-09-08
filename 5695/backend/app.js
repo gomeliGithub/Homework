@@ -133,7 +133,7 @@ socketServer.on('connection', (connection, request) => {
 logLineAsync(logFN, "Socket server running on port " + port2);
 
 webserver.post('/sign/:op', async (req, res) => {
-    const op = req.params.op.substring(1);
+    const op = req.params.op;
 
     if (!op || (op !== 'in' && op !== 'up')) {
         res.status(400).end();
@@ -205,7 +205,7 @@ webserver.post('/sign/:op', async (req, res) => {
 });
 
 webserver.get('/signUpVerify/:login', async (req, res) => {
-    const login = req.params.login.substring(1);
+    const login = req.params.login;
 
     const client = await sequelize.models.Client.findOne({ where: { login }});
 
@@ -387,7 +387,7 @@ webserver.get('/getFilesInfo', async (req, res) => {
 });
 
 webserver.get('/getFile/:fileName', async (req, res) => {
-    const fileName = req.params.fileName.substring(1);
+    const fileName = req.params.fileName;
     const clientLogin = req.session.client.login;
 
     const client = await sequelize.models.Client.findOne({ where: { login: clientLogin }});
