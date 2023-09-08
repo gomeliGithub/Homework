@@ -29,7 +29,7 @@
         </button>
         <span *ngIf="op === 'in'" class="d-block mb-3">
             Ещё нет аккаунта?
-            <a [routerLink]="['/signUp']" routerLinkActive="active" class="link-offset-2 link-offset-3-hover link-underline link-underline-opacity-0 link-underline-opacity-75-hover"> (Регистрация)</a>
+            <a routerLink="/signUp" routerLinkActive="active" class="link-offset-2 link-offset-3-hover link-underline link-underline-opacity-0 link-underline-opacity-75-hover"> (Регистрация)</a>
         </span>
         <div *ngIf="signError" class="alert alert-danger text-center">
             <span class="text-danger" #signError></span>
