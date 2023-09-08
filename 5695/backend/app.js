@@ -205,17 +205,17 @@ webserver.post('/sign/:op', async (req, res) => {
 });
 
 webserver.get('/signUpVerify/:login', async (req, res) => {
-    const login = req.params.login.substring(1);
+    const login = req.params.login.substring(1); 
 
     const client = await sequelize.models.Client.findOne({ where: { login }});
 
-    if (!client || !req.session.client.login) {
+    if (!client) {
         res.status(401).end();
 
         return;
     }
 
-    await client.update({ verified: true}, { where: { login }});
+    await client.update({ verified: true }, { where: { login }});
 
     await logLineAsync(logFN, `[${port}] Аккаунт клиента --- ${login} --- подтвержден`);
 
