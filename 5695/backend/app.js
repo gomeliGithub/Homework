@@ -143,7 +143,9 @@ webserver.post('/sign/:op', async (req, res) => {
 
     const { clientLogin, clientPassword, clientEmail } = req.body; 
 
-    if (!clientLogin || !clientPassword || (op === 'up' && !clientEmail)) {
+    const emailPattern = /^[^\s()<>@,;:\/]+@\w[\w\.-]+\.[a-z]{2,}$/i;
+
+    if (!clientLogin || !clientPassword || (op === 'up' && (!clientEmail || !emailPattern.test(clientEmail)))) {
         res.status(400).end();
 
         return;
