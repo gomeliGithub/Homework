@@ -3,6 +3,8 @@ import MySQLSession from 'express-mysql-session';
 
 import crypto from 'crypto';
 
+const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000; // 24 часа
+
 const MySQLStore = MySQLSession(session);
 
 const sessionStore = new MySQLStore({
@@ -29,8 +31,11 @@ export default function sessionInit () {
     return session({
         secret: secret,
         resave: false,
-        saveUninitialized: true,
-        cookie: { secure: false },
+        saveUninitialized: false,
+        cookie: { 
+			maxAge: TWENTY_FOUR_HOURS,
+			secure: false 
+		},
         store: sessionStore
     });
 }

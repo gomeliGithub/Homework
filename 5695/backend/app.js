@@ -28,7 +28,8 @@ const webserver = express();
 const origin = process.argv[2] === '--prod' ? 'http://test.expapp.online' : 'http://localhost:4200';
 
 webserver.use(cors({
-    origin
+    origin,
+    credentials: true
 }));
 
 webserver.use(json());
@@ -192,8 +193,10 @@ webserver.post('/sign/:op', async (req, res) => {
         await logLineAsync(logFN, `[${port}] Клиент --- ${clientLogin} --- вошел в систему`);
 
         if (!req.session.client) {
+            req.session.client = {};
+
             req.session.client.login = clientLogin;
-        }
+        } else req.session.client.login = clientLogin;
 
         res.send({ login: clientLogin }).end();
     }
@@ -217,11 +220,12 @@ webserver.get('/signUpVerify/:login', async (req, res) => {
     res.redirect(301, origin);
 });
 
-webserver.get('/checkSessionExists/:login', async (req, res) => {
-    const login = req.params.login.substring(1);
+webserver.get('/checkSessionExists', async (req, res) => {
+    if (req.session.client && req.session.client.login) {
+        const login = req.session.client.login;
 
-    if (req.session.login === login) res.send('EXISTS').end();
-    else res.send('NONEXISTS').end();
+        res.send(login).end();
+    } else res.send('NONEXISTS').end();
 });
 
 webserver.post('/uploadFile', async (req, res) => {
@@ -269,7 +273,9 @@ webserver.post('/uploadFile', async (req, res) => {
         res.send('FILEEXISTS').end();
 
         return;
-    } catch {}
+    } catch {
+        await fsPromises.mkdir(join(filesInfoWithCommentsFolderFN, clientLogin));
+    }
 
     const uploadedFilesNumber = (await fsPromises.readdir(join(filesInfoWithCommentsFolderFN, clientLogin))).length;
 

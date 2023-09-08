@@ -23,7 +23,7 @@ export class DownloadedFilesListComponentService {
     private _socketServerHost: string = environment.webSocketURL;
 
     public getFilesInfo (login: string): Observable<IFileInfoWithComments[]> {
-        return this.http.get(`${this._webServerHost}/getFilesInfo`) as Observable<IFileInfoWithComments[]>;
+        return this.http.get(`${this._webServerHost}/getFilesInfo`, { withCredentials: true }) as Observable<IFileInfoWithComments[]>;
     }
 
     public uploadFile (formFile: File, uploadFileForm: FormGroup, newClientId: number): void {

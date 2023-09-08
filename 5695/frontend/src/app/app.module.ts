@@ -1,5 +1,6 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
+import { HashLocationStrategy, LocationStrategy } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
@@ -23,7 +24,7 @@ import { SignComponent } from './sign/sign.component';
         ReactiveFormsModule,
         HttpClientModule
     ],
-    providers: [AppService],
+    providers: [ AppService, { provide: LocationStrategy, useClass: HashLocationStrategy }],
     exports: [AppRoutingModule],
     bootstrap: [AppComponent]
 })

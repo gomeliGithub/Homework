@@ -11,7 +11,8 @@ const appRoutes: Routes = [
     { path: '', redirectTo: '/sign/in', pathMatch: 'full' },
     { path: 'signIn', redirectTo: '/sign/in', pathMatch: 'full' },
     { path: 'signUp', redirectTo: '/sign/up', pathMatch: 'full' },
-    { path: 'fileStorage/:login', component: DownloadedFilesListComponent, canActivate: [AuthGuard] }
+    { path: 'fileStorage/:login', component: DownloadedFilesListComponent, canActivate: [AuthGuard] },
+    { path: 'fileStorage', component: DownloadedFilesListComponent, canActivate: [AuthGuard] }
 ];
 
 @NgModule({

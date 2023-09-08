@@ -1,4 +1,4 @@
-import { Component, ViewChild, ViewContainerRef } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, ViewChild, ViewContainerRef } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router, ActivatedRoute } from '@angular/router';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
@@ -18,14 +18,14 @@ export class SignComponent {
     constructor (
         private readonly http: HttpClient,
         private readonly router: Router,
-        private readonly activateRoute: ActivatedRoute
+        private readonly activateRoute: ActivatedRoute,
+        private changeDetectorRef: ChangeDetectorRef
     ) { }
 
     private _webServerHost: string = environment.webServerURL;
 
-    @ViewChild('signError', { read: ViewContainerRef, static: false })
-    private signErrorViewRef: ViewContainerRef;
-
+    @ViewChild('signError', { static: false }) private signErrorViewRef: ElementRef;
+    
     public signError: boolean = false;
 
     public op: string = this.activateRoute.snapshot.paramMap.get('op') as string;
@@ -38,9 +38,8 @@ export class SignComponent {
 
     public sign (): void {
         const signData: ISignData = this.signForm.value;
-        const signErrorElement: HTMLSpanElement = this.signErrorViewRef.element.nativeElement;
 
-        this.http.post(`${this._webServerHost}/sign/:${this.op}`, signData).pipe(map(data => data as ISignResponseData)).subscribe({
+        this.http.post(`${this._webServerHost}/sign/:${this.op}`, signData, { withCredentials: true }).pipe(map(data => data as ISignResponseData)).subscribe({
             next: data => {
                 this.signError = false;
 
@@ -49,6 +48,10 @@ export class SignComponent {
             },
             error: () => {
                 this.signError = true;
+
+                this.changeDetectorRef.detectChanges();
+
+                const signErrorElement: HTMLSpanElement = this.signErrorViewRef.nativeElement;
 
                 signErrorElement.textContent = this.op === 'in' ? "Такого пользователя не существует, либо неверный пароль, либо данный пользователь не подтверждён." : 'Что-то пошло не так. Попробуйте ещё раз.';
             }
