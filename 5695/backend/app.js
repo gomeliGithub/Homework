@@ -28,7 +28,7 @@ const webserver = express();
 
 const origin = process.argv[2] === '--prod' ? 'http://178.172.173.222:7980' : 'http://localhost:4200'; // 'http://test.expapp.online'
 
-const secret = crypto.randomBytes(40).toString();
+const secret = crypto.randomBytes(40).toString('hex');
 
 webserver.use(cors({
     origin,
@@ -156,7 +156,7 @@ webserver.post('/sign/:op', async (req, res) => {
 
         const passwordHash = await bcrypt.hash(clientPassword, 10);
 
-        const confirm_sid = crypto.randomBytes(20).toString();
+        const confirm_sid = crypto.randomBytes(20).toString('utf8');
 
         await sequelize.models.Client.create({ login: clientLogin, password: passwordHash, email: clientEmail, verified: false, confirm_sid });
 
@@ -324,7 +324,7 @@ webserver.post('/uploadFile', async (req, res) => {
         const message = createMessage('uploadFile', 'FINISH', { uploadedSize: currentClient.uploadedSize, fileMetaSize: fileMeta.size });
 
         const newFileInfo = {
-            id: crypto.randomBytes(15).toString(),
+            id: crypto.randomBytes(15).toString('utf8'),
             name: fileMeta.name,
             comment: currentClient.comment
         }
