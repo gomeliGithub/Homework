@@ -2,7 +2,7 @@ import express, { json } from 'express';
 import { WebSocketServer } from 'ws';
 import * as fs from 'fs';
 import * as fsPromises from 'fs/promises';
-import { join, dirname } from 'path';
+import { join, dirname, extname } from 'path';
 import { fileURLToPath } from 'url';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
@@ -253,7 +253,9 @@ webserver.post('/uploadFile', async (req, res) => {
         return;
     }
 
-    const newFilePath = join(__dirname, 'uploadedFiles', clientLogin, fileMeta.name);
+    const newFileId = crypto.randomBytes(15).toString('hex');
+
+    const newFilePath = join(__dirname, 'uploadedFiles', clientLogin, newFileId);
 
     const activeUploadClient = webSocketClients.some(client => client._id === webSocketClientId);
 
@@ -326,7 +328,7 @@ webserver.post('/uploadFile', async (req, res) => {
         const message = createMessage('uploadFile', 'FINISH', { uploadedSize: currentClient.uploadedSize, fileMetaSize: fileMeta.size });
 
         const newFileInfo = {
-            id: crypto.randomBytes(15).toString('hex'),
+            id: currentClient.fileId,
             name: fileMeta.name,
             comment: currentClient.comment
         }
@@ -350,6 +352,7 @@ webserver.post('/uploadFile', async (req, res) => {
         activeWriteStream: writeStream, 
         currentChunkNumber, 
         uploadedSize, 
+        fileId: newFileId,
         fileMetaName: fileMeta.name, 
         fileMetaSize: fileMeta.size,
         comment, 
@@ -415,7 +418,13 @@ webserver.get('/getFile/:fileId', async (req, res) => {
         return;
     }
 
-    res.download(filePath);
+    const filesInfoWithCommentsFN = join(filesInfoWithCommentsFolderFN, clientLogin, 'filesInfoWithComments.json');
+
+    const filesInfoWithComments = JSON.parse(await fsPromises.readFile(filesInfoWithCommentsFN, { encoding: 'utf8' }));
+
+    const originalFileName = filesInfoWithComments.find(fileInfo => fileInfo.id === fileId).name;
+
+    res.download(filePath, originalFileName);
 });
 
 webserver.listen(port, async () => {
