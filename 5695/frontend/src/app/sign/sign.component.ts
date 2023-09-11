@@ -19,7 +19,7 @@ export class SignComponent {
         private readonly http: HttpClient,
         private readonly router: Router,
         private readonly activateRoute: ActivatedRoute,
-        private changeDetectorRef: ChangeDetectorRef
+        private readonly changeDetectorRef: ChangeDetectorRef
     ) { }
 
     private _webServerHost: string = environment.webServerURL;
@@ -53,8 +53,12 @@ export class SignComponent {
 
                 const signErrorElement: HTMLSpanElement = this.signErrorViewRef.nativeElement;
 
-                signErrorElement.textContent = this.op === 'in' ? "Такого пользователя не существует, либо неверный пароль, либо данный пользователь не подтверждён." : 'Что-то пошло не так. Попробуйте ещё раз.';
+                signErrorElement.textContent = this.op === 'in' ? "Такого пользователя не существует, либо неверный пароль, либо данный пользователь не подтверждён." : 'Такой пользователь уже существует.';
             }
         });
+    }
+
+    public reloadComponent (): void {
+        this.router.navigate(['/signUp']).then(() => window.location.reload());
     }
 }
