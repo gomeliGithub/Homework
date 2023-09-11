@@ -156,7 +156,7 @@ webserver.post('/sign/:op', async (req, res) => {
 
         const passwordHash = await bcrypt.hash(clientPassword, 10);
 
-        const confirm_sid = crypto.randomBytes(20).toString('base64');
+        const confirm_sid = Math.random().toString(20).substring(2, 20);
 
         await sequelize.models.Client.create({ login: clientLogin, password: passwordHash, email: clientEmail, verified: false, confirm_sid });
 
@@ -324,7 +324,7 @@ webserver.post('/uploadFile', async (req, res) => {
         const message = createMessage('uploadFile', 'FINISH', { uploadedSize: currentClient.uploadedSize, fileMetaSize: fileMeta.size });
 
         const newFileInfo = {
-            id: crypto.randomBytes(15).toString('base64'),
+            id: crypto.randomBytes(15).toString('hex'),
             name: fileMeta.name,
             comment: currentClient.comment
         }
