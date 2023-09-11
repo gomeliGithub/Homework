@@ -5,6 +5,7 @@ export interface IWSMessage {
 }
 
 export interface IFileInfoWithComments {
+    id: string;
     name: string;
     comment: string;
 }

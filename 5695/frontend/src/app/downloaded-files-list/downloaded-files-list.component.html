@@ -32,7 +32,7 @@
         <span class="text-danger">Загруженных файлов нет</span>
     </div>
     <div *ngIf="filesInfoWithComments && filesInfoWithComments.length >= 1" class="list-group list-group-numbered list-group-flush ms-3">
-        <a *ngFor="let fileInfo of filesInfoWithComments" href="{{webServerHost}}/getFile/:{{fileInfo.name}}/:{{login}}" class="list-group-item list-group-item-action list-group-item-info p-2">
+        <a *ngFor="let fileInfo of filesInfoWithComments" href="{{webServerHost}}/getFile/:{{fileInfo.id}}" class="list-group-item list-group-item-action list-group-item-info p-2">
             {{fileInfo.name}} - "{{fileInfo.comment}}"
         </a>
     </div>

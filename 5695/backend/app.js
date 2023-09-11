@@ -44,7 +44,6 @@ const sequelize = await dbConnection();
 const port = 80;
 const port2 = 443;
 const logFN = join(__dirname, '_server.log');
-const filesInfoWithCommentsFN = join(__dirname, 'filesInfoWithComments.json');
 const filesInfoWithCommentsFolderFN = join(__dirname, 'uploadedFiles');
 
 let webSocketClients = [];
@@ -157,15 +156,17 @@ webserver.post('/sign/:op', async (req, res) => {
 
         const passwordHash = await bcrypt.hash(clientPassword, 10);
 
-        await sequelize.models.Client.create({ login: clientLogin, password: passwordHash, email: clientEmail, verified: false });
+        const confirm_sid = crypto.randomBytes(20).toString();
+
+        await sequelize.models.Client.create({ login: clientLogin, password: passwordHash, email: clientEmail, verified: false, confirm_sid });
 
         await logLineAsync(logFN, `[${port}] Клиент --- ${clientLogin} --- зарегистрирован`);
 
         try {
-            const apiURLOrigin = `${(new URL(req.url, `http://${req.headers.host}`)).origin}:${port.toString()}`; 
+            const apiURLOrigin = `${(new URL(req.url, `http://${req.headers.host}`)).origin}:${port.toString()}`;
 
             const mailBody = `Спасибо за регистрацию. Для завершения регистрации перейдите по ссылке.
-                <a href=${apiURLOrigin}/signUpVerify/:${clientLogin}>Подтвердить аккаунт</a>
+                <a href=${apiURLOrigin}/signUpVerify/:${confirm_sid}>Подтвердить аккаунт</a>
             `;
 
             await sendEmail(clientEmail, 'Подтверждение аккаунта', mailBody);
@@ -199,20 +200,20 @@ webserver.post('/sign/:op', async (req, res) => {
     }
 });
 
-webserver.get('/signUpVerify/:login', async (req, res) => {
-    const login = req.params.login.substring(1); 
+webserver.get('/signUpVerify/:confirm_sid', cors({ origin: '*' }), async (req, res) => {
+    const confirm_sid = req.params.confirm_sid.substring(1); 
 
-    const client = await sequelize.models.Client.findOne({ where: { login }});
+    const client = await sequelize.models.Client.findOne({ where: { confirm_sid }});
 
-    if (!client) {
+    if (!client || client.verified || client.createdAt < Date.now() - 3600000) {
         res.status(401).end();
 
         return;
     }
 
-    await client.update({ verified: true }, { where: { login }});
+    await client.update({ verified: true, confirm_sid: null }, { where: { confirm_sid }});
 
-    await logLineAsync(logFN, `[${port}] Аккаунт клиента --- ${login} --- подтвержден`);
+    await logLineAsync(logFN, `[${port}] Аккаунт клиента --- ${confirm_sid} --- подтвержден`);
 
     res.redirect(301, origin);
 });
@@ -323,9 +324,12 @@ webserver.post('/uploadFile', async (req, res) => {
         const message = createMessage('uploadFile', 'FINISH', { uploadedSize: currentClient.uploadedSize, fileMetaSize: fileMeta.size });
 
         const newFileInfo = {
+            id: crypto.randomBytes(15).toString(),
             name: fileMeta.name,
             comment: currentClient.comment
         }
+
+        const filesInfoWithCommentsFN = join(filesInfoWithCommentsFolderFN, currentClient.login, 'filesInfoWithComments.json');
 
         await appendFileInfoWithComments(fsPromises, filesInfoWithCommentsFN, newFileInfo);
 
@@ -364,6 +368,8 @@ webserver.get('/getFilesInfo', async (req, res) => {
         return;
     }
 
+    const filesInfoWithCommentsFN = join(filesInfoWithCommentsFolderFN, clientLogin, 'filesInfoWithComments.json');
+
     try {
         await fsPromises.access(filesInfoWithCommentsFN, fsPromises.constants.F_OK);
     }
@@ -385,8 +391,8 @@ webserver.get('/getFilesInfo', async (req, res) => {
     readStream.on('end', () => res.send(JSON.parse(filesInfoWithComments)).end());
 });
 
-webserver.get('/getFile/:fileName', async (req, res) => {
-    const fileName = req.params.fileName.substring(1);
+webserver.get('/getFile/:fileId', async (req, res) => {
+    const fileId = req.params.fileId.substring(1);
     const clientLogin = req.session.client.login;
 
     const client = await sequelize.models.Client.findOne({ where: { login: clientLogin }});
@@ -397,7 +403,7 @@ webserver.get('/getFile/:fileName', async (req, res) => {
         return;
     }
 
-    const filePath = join(filesInfoWithCommentsFolderFN, clientLogin, fileName);
+    const filePath = join(filesInfoWithCommentsFolderFN, clientLogin, fileId);
 
     try {
         await fsPromises.access(filePath, fsPromises.constants.F_OK);

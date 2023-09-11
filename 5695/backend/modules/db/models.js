@@ -22,6 +22,17 @@ export default async function defineModels (sequelize) {
         verified: {
             type: DataTypes.BOOLEAN,
             allowNull: false,
+        },
+
+        createdAt: {
+            type: DataTypes.DATE,
+            allowNull: false,
+            defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
+        },
+
+        confirm_sid: {
+            type: DataTypes.STRING,
+            allowNull: true,
         }
     },  {
         sequelize,
