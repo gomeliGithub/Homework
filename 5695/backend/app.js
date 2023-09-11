@@ -172,6 +172,12 @@ webserver.post('/sign/:op', async (req, res) => {
             await sendEmail(clientEmail, 'Подтверждение аккаунта', mailBody);
 
             await logLineAsync(logFN, `[${port}] Письмо отправлено клиенту --- ${clientLogin} ---`);
+
+            try {
+                await fsPromises.access(join(filesInfoWithCommentsFolderFN, clientLogin), fsPromises.constants.F_OK);
+            } catch {
+                await fsPromises.mkdir(join(filesInfoWithCommentsFolderFN, clientLogin));
+            }
         } catch (error) {
             await logLineAsync(logFN, `[${port}] При отправке письма клиенту --- ${clientLogin} --- произошла ошибка - ${error}`);
 
@@ -274,12 +280,6 @@ webserver.post('/uploadFile', async (req, res) => {
 
         return;
     } catch { }
-
-    try {
-        await fsPromises.access(join(filesInfoWithCommentsFolderFN, clientLogin), fsPromises.constants.F_OK);
-    } catch {
-        await fsPromises.mkdir(join(filesInfoWithCommentsFolderFN, clientLogin));
-    }
 
     const uploadedFilesNumber = (await fsPromises.readdir(join(filesInfoWithCommentsFolderFN, clientLogin))).length;
 
