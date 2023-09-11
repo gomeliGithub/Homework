@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute } from '@angular/router';
 import { Title } from '@angular/platform-browser';
@@ -24,6 +24,8 @@ export class DownloadedFilesListComponent implements OnInit {
         private readonly activateRoute: ActivatedRoute,
         private readonly titleService: Title
     ) { }
+
+    @ViewChild('noFilesUploaded', { static: false }) private noFilesUploadedViewRef: ElementRef<HTMLDivElement>;
 
     public login: string = this.activateRoute.snapshot.paramMap.get('login') as string;
 
@@ -80,7 +82,7 @@ export class DownloadedFilesListComponent implements OnInit {
         }, { responseType: 'text', withCredentials: true }).subscribe({
             next: result => {
                 switch (result) {
-                    case 'START': { this.downloadedFilesListComponentService.uploadFile(this._formFile, this.uploadFileForm, newClientId); break; }
+                    case 'START': { this.noFilesUploadedViewRef.nativeElement.remove(); this.downloadedFilesListComponentService.uploadFile(this._formFile, this.uploadFileForm, newClientId); break; }
                     case 'PENDING': { this.responseMessage = "Сервер занят. Повторите попытку позже."; break; }
                     case 'FILEEXISTS': { this.responseMessage = "Файл с таким именем уже загружен."; break; }
                     case 'MAXCOUNT': { this.responseMessage = "Загружено максимальное количество файлов."; break; }
