@@ -82,7 +82,7 @@ export class DownloadedFilesListComponent implements OnInit {
         }, { responseType: 'text', withCredentials: true }).subscribe({
             next: result => {
                 switch (result) {
-                    case 'START': { this.noFilesUploadedViewRef.nativeElement.remove(); this.downloadedFilesListComponentService.uploadFile(this._formFile, this.uploadFileForm, newClientId); break; }
+                    case 'START': { if (this.noFilesUploadedViewRef) this.noFilesUploadedViewRef.nativeElement.remove(); this.downloadedFilesListComponentService.uploadFile(this._formFile, this.uploadFileForm, newClientId); break; }
                     case 'PENDING': { this.responseMessage = "Сервер занят. Повторите попытку позже."; break; }
                     case 'FILEEXISTS': { this.responseMessage = "Файл с таким именем уже загружен."; break; }
                     case 'MAXCOUNT': { this.responseMessage = "Загружено максимальное количество файлов."; break; }
