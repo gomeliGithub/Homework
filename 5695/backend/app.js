@@ -158,7 +158,7 @@ webserver.post('/sign/:op', async (req, res) => {
 
         const confirm_sid = Math.random().toString(20).substring(2, 20);
 
-        await sequelize.models.Client.create({ login: clientLogin, password: passwordHash, email: clientEmail, verified: false, confirm_sid });
+        const newClient = await sequelize.models.Client.create({ login: clientLogin, password: passwordHash, email: clientEmail, verified: false, confirm_sid });
 
         await logLineAsync(logFN, `[${port}] Клиент --- ${clientLogin} --- зарегистрирован`);
 
@@ -174,6 +174,8 @@ webserver.post('/sign/:op', async (req, res) => {
             await logLineAsync(logFN, `[${port}] Письмо отправлено клиенту --- ${clientLogin} ---`);
         } catch (error) {
             await logLineAsync(logFN, `[${port}] При отправке письма клиенту --- ${clientLogin} --- произошла ошибка - ${error}`);
+
+            await newClient.destroy();
 
             res.status(500).end();
 
@@ -213,7 +215,7 @@ webserver.get('/signUpVerify/:confirm_sid', cors({ origin: '*' }), async (req, r
 
     await client.update({ verified: true, confirm_sid: null }, { where: { confirm_sid }});
 
-    await logLineAsync(logFN, `[${port}] Аккаунт клиента --- ${confirm_sid} --- подтвержден`);
+    await logLineAsync(logFN, `[${port}] Аккаунт клиента --- ${client.login} --- подтвержден`);
 
     res.redirect(301, origin);
 });
