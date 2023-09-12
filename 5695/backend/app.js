@@ -57,7 +57,11 @@ socketServer.on('connection', (connection, request) => {
 
     const currentClient = webSocketClients.find(client => client._id === webSocketClientId);
 
-    if (!currentClient) connection.terminate();
+    if (!currentClient) {
+        connection.terminate();
+
+        return;
+    }
 
     currentClient.connection = connection;
 
@@ -86,6 +90,14 @@ socketServer.on('connection', (connection, request) => {
                     else currentClient.connection.send(JSON.stringify(message));
                 });
             }
+        }
+    });
+
+    connection.on('close', async () => {
+        if (currentClient.uploadedSize !== currentClient.fileMetaSize) {
+            await fsPromises.unlink(join(__dirname, 'uploadedFiles', currentClient.login, currentClient.fileMetaName));
+
+            webSocketClients = webSocketClients.filter(client => client._id !== currentClient._id);
         }
     });
 
