@@ -53,7 +53,11 @@ const socketServer = new WebSocketServer({ port: port2 });
 socketServer.on('connection', (connection, request) => {
     const webSocketClientId = parseFloat(request.url.substring(2));
 
-    if (isNaN(webSocketClientId)) connection.terminate();
+    if (isNaN(webSocketClientId)) {
+        connection.terminate();
+
+        return;
+    }
 
     const currentClient = webSocketClients.find(client => client._id === webSocketClientId);
 
@@ -128,7 +132,7 @@ socketServer.on('connection', (connection, request) => {
             });
     
             webSocketClients = webSocketClients.filter(client => client.connection);
-        } catch (error) { console.error(error);
+        } catch (error) {
             logLineAsync(logFN, `[${port2}] WebSocketServer error`);
         }
     }, 3000);
