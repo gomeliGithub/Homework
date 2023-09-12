@@ -59,6 +59,6 @@ export class SignComponent {
     }
 
     public reloadComponent (): void {
-        this.router.navigate(['/signUp'], { skipLocationChange: true }).then(() => window.location.reload());
+        this.router.navigate(['/signUp']).then(() => window.location.reload());
     }
 }
