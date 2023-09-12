@@ -29,7 +29,7 @@ export class DownloadedFilesListComponent implements OnInit {
 
     public login: string = this.activateRoute.snapshot.paramMap.get('login') as string;
 
-    public filesInfo: Observable<IFileInfoWithComments[]> = this.downloadedFilesListComponentService.getFilesInfo(this.login).pipe(map(data => this.filesInfoWithComments = data));
+    public filesInfo: Observable<IFileInfoWithComments[]> = this.downloadedFilesListComponentService.getFilesInfo().pipe(map(data => this.filesInfoWithComments = data));
     public filesInfoWithComments: IFileInfoWithComments[];
 
     public webServerHost: string = environment.webServerURL;

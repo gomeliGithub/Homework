@@ -22,7 +22,7 @@ export class DownloadedFilesListComponentService {
     private _webServerHost: string = environment.webServerURL;
     private _socketServerHost: string = environment.webSocketURL;
 
-    public getFilesInfo (login: string): Observable<IFileInfoWithComments[]> {
+    public getFilesInfo (): Observable<IFileInfoWithComments[]> {
         return this.http.get(`${this._webServerHost}/getFilesInfo`, { withCredentials: true }) as Observable<IFileInfoWithComments[]>;
     }
 

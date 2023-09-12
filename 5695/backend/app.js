@@ -108,7 +108,7 @@ socketServer.on('connection', (connection, request) => {
         
                         logLineAsync(logFN, `[${port2}] Один из клиентов отключился, закрываем соединение с ним`);
                     });
-                } else {
+                } else if (client.connection) {
                     const message = createMessage('timer', 'timer= ' + timer);
     
                     client.connection.send(JSON.stringify(message));
@@ -116,9 +116,7 @@ socketServer.on('connection', (connection, request) => {
             });
     
             webSocketClients = webSocketClients.filter(client => client.connection);
-        }
-
-        catch (error) { console.error(error);
+        } catch (error) { console.error(error);
             logLineAsync(logFN, `[${port2}] WebSocketServer error`);
         }
     }, 3000);
@@ -137,9 +135,10 @@ webserver.post('/sign/:op', async (req, res) => {
 
     const { clientLogin, clientPassword, clientEmail } = req.body; 
 
+    const clientLoginPattern = /^[a-zA-Z](.[a-zA-Z0-9_-]*)$/;
     const emailPattern = /^[^\s()<>@,;:\/]+@\w[\w\.-]+\.[a-z]{2,}$/i;
 
-    if (!clientLogin || !clientPassword || (op === 'up' && (!clientEmail || !emailPattern.test(clientEmail)))) {
+    if (!clientLogin || !clientLoginPattern.test(clientLogin) || !clientPassword || (op === 'up' && (!clientEmail || !emailPattern.test(clientEmail)))) {
         res.status(400).end();
 
         return;
@@ -238,14 +237,21 @@ webserver.post('/uploadFile', async (req, res) => {
     const webSocketClientId = req.body._id;
     const clientLogin = req.body.clientLogin;
 
-    const fileMeta = JSON.parse(req.body.uploadFileMeta);
+    let fileMeta = '';
+
+    try {
+        fileMeta = JSON.parse(req.body.uploadFileMeta);
+    } catch {
+        res.status(400).end();
+
+        return;
+    }
+
     const comment = req.body.uploadFileComment;
 
     const client = await sequelize.models.Client.findOne({ where: { login: clientLogin }});
-    const clientLoginPattern = /^[a-zA-Z](.[a-zA-Z0-9_-]*)$/;
 
-    if (typeof webSocketClientId !== 'number' || webSocketClientId < 0 || webSocketClientId > 1
-        || !client || typeof clientLogin !== 'string' || clientLogin === '' || !clientLoginPattern.test(clientLogin)
+    if (typeof webSocketClientId !== 'number' || webSocketClientId < 0 || webSocketClientId > 1 || !client
         || typeof comment !== 'string' || comment === ''
     ) {
         res.status(400).end();
@@ -363,7 +369,7 @@ webserver.post('/uploadFile', async (req, res) => {
 });
 
 webserver.get('/getFilesInfo', async (req, res) => {
-    const clientLogin = req.session.client.login;
+    const clientLogin = req.session.client ? req.session.client.login : undefined;
 
     const client = await sequelize.models.Client.findOne({ where: { login: clientLogin }});
 
@@ -377,9 +383,7 @@ webserver.get('/getFilesInfo', async (req, res) => {
 
     try {
         await fsPromises.access(filesInfoWithCommentsFN, fsPromises.constants.F_OK);
-    }
-
-    catch {
+    } catch {
         await fsPromises.writeFile(filesInfoWithCommentsFN, JSON.stringify([]));
 
         res.send([]).end();
@@ -398,12 +402,12 @@ webserver.get('/getFilesInfo', async (req, res) => {
 
 webserver.get('/getFile/:fileId', async (req, res) => {
     const fileId = req.params.fileId.substring(1);
-    const clientLogin = req.session.client.login;
+    const clientLogin = req.session.client ? req.session.client.login : undefined;
 
     const client = await sequelize.models.Client.findOne({ where: { login: clientLogin }});
 
     if (!client) {
-        res.status(400).end();
+        res.status(401).end();
 
         return;
     }
