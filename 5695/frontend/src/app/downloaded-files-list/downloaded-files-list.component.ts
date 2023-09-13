@@ -76,7 +76,6 @@ export class DownloadedFilesListComponent implements OnInit {
         
         this.http.post(`${this.webServerHost}/uploadFile`, {
             _id: newClientId, 
-            clientLogin: this.login,
             uploadFileMeta: fileMetaJson, 
             uploadFileComment: this.uploadFileForm.value['formFileComment'] as string
         }, { responseType: 'text', withCredentials: true }).subscribe({

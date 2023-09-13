@@ -144,6 +144,8 @@ webserver.post('/sign/:op', async (req, res) => {
     const op = req.params.op.substring(1);
 
     if (!op || (op !== 'in' && op !== 'up')) {
+        await logLineAsync(logFN, `[${port}] Wrong sign parameter`);
+
         res.status(400).end();
 
         return;
@@ -155,6 +157,8 @@ webserver.post('/sign/:op', async (req, res) => {
     const emailPattern = /^[^\s()<>@,;:\/]+@\w[\w\.-]+\.[a-z]{2,}$/i;
 
     if (!clientLogin || !clientLoginPattern.test(clientLogin) || !clientPassword || (op === 'up' && (!clientEmail || !emailPattern.test(clientEmail)))) {
+        await logLineAsync(logFN, `[${port}] Sign - not valid sign data`);
+
         res.status(400).end();
 
         return;
@@ -164,6 +168,8 @@ webserver.post('/sign/:op', async (req, res) => {
 
     if (op === 'up') {
         if (client) {
+            await logLineAsync(logFN, `[${port}] SignUp - client is exists`);
+
             res.status(401).end();
 
             return;
@@ -206,6 +212,8 @@ webserver.post('/sign/:op', async (req, res) => {
         res.status(200).end();
     } else {
         if (!client || !(await bcrypt.compare(clientPassword, client.password)) || !client.verified) {
+            await logLineAsync(logFN, `[${port}] SignIn - not valid data`);
+
             res.status(401).end();
 
             return;
@@ -229,6 +237,8 @@ webserver.get('/signUpVerify/:confirm_sid', cors({ origin: '*' }), async (req, r
     const client = await sequelize.models.Client.findOne({ where: { confirm_sid }});
 
     if (!client || client.verified || client.createdAt < Date.now() - 3600000) {
+        await logLineAsync(logFN, `[${port}] SignUpVerify - not valid client data`);
+
         res.status(401).end();
 
         return;
@@ -251,13 +261,15 @@ webserver.get('/checkSessionExists', async (req, res) => {
 
 webserver.post('/uploadFile', async (req, res) => {
     const webSocketClientId = req.body._id;
-    const clientLogin = req.body.clientLogin;
+    const clientLogin = req.session.client ? req.session.client.login : undefined;
 
     let fileMeta = '';
 
     try {
         fileMeta = JSON.parse(req.body.uploadFileMeta);
     } catch {
+        await logLineAsync(logFN, `[${port}] UploadFile - not valid fileMeta`);
+
         res.status(400).end();
 
         return;
@@ -270,6 +282,8 @@ webserver.post('/uploadFile', async (req, res) => {
     if (typeof webSocketClientId !== 'number' || webSocketClientId < 0 || webSocketClientId > 1 || !client
         || typeof comment !== 'string' || comment === ''
     ) {
+        await logLineAsync(logFN, `[${port}] UploadFile - not valid client data or fileComment`);
+
         res.status(400).end();
 
         return;
@@ -286,6 +300,8 @@ webserver.post('/uploadFile', async (req, res) => {
     webSocketClients.forEach(client => client.activeWriteStream ? activeUploadsClientNumber += 1 : null);
 
     if (activeUploadClient) {
+        await logLineAsync(logFN, `[${port}] UploadFile - webSocketClient with the same id is exists`);
+
         res.status(400).end();
 
         return;
@@ -390,6 +406,8 @@ webserver.get('/getFilesInfo', async (req, res) => {
     const client = await sequelize.models.Client.findOne({ where: { login: clientLogin }});
 
     if (!client) {
+        await logLineAsync(logFN, `[${port}] GetFilesInfo - client is not exists`);
+
         res.status(400).end();
 
         return;
@@ -423,6 +441,8 @@ webserver.get('/getFile/:fileId', async (req, res) => {
     const client = await sequelize.models.Client.findOne({ where: { login: clientLogin }});
 
     if (!client) {
+        await logLineAsync(logFN, `[${port}] GetFile - client is not exists`);
+
         res.status(401).end();
 
         return;
@@ -433,6 +453,8 @@ webserver.get('/getFile/:fileId', async (req, res) => {
     try {
         await fsPromises.access(filePath, fsPromises.constants.F_OK);
     } catch {
+        await logLineAsync(logFN, `[${port}] GetFile - file with the same id is exists`);
+
         res.status(400).end();
 
         return;
