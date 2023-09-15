@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, ElementRef, ViewChild, ViewContainerRef } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, ViewChild } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router, ActivatedRoute } from '@angular/router';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
@@ -36,9 +36,9 @@ export class SignComponent {
         "clientEmail": new FormControl("", [ Validators.email ])
     });
 
-    public sign (): void {
+    public async sign (): Promise<void> {
         const signData: ISignData = this.signForm.value;
-
+        
         this.http.post(`${this._webServerHost}/sign/:${this.op}`, signData, { withCredentials: true }).pipe(map(data => data as ISignResponseData)).subscribe({
             next: data => {
                 this.signError = false;

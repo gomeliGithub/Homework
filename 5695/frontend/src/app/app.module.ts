@@ -24,7 +24,7 @@ import { SignComponent } from './sign/sign.component';
         ReactiveFormsModule,
         HttpClientModule
     ],
-    providers: [ AppService, { provide: LocationStrategy, useClass: HashLocationStrategy }],
+    providers: [ AppService, { provide: LocationStrategy, useClass: HashLocationStrategy } ],
     exports: [AppRoutingModule],
     bootstrap: [AppComponent]
 })

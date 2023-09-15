@@ -26,7 +26,7 @@ const __dirname = dirname(__filename);
 
 const webserver = express();
 
-const origin = process.argv[2] === '--prod' ? 'http://178.172.173.222:7980' : 'http://localhost:4200'; // 'http://test.expapp.online'
+const origin = process.argv[2] === '--prod' ? 'http://178.172.173.222:7980' : 'http://localhost:4200';
 
 const secret = crypto.randomBytes(40).toString('hex');
 
@@ -156,7 +156,9 @@ webserver.post('/sign/:op', async (req, res) => {
     const clientLoginPattern = /^[a-zA-Z](.[a-zA-Z0-9_-]*)$/;
     const emailPattern = /^[^\s()<>@,;:\/]+@\w[\w\.-]+\.[a-z]{2,}$/i;
 
-    if (!clientLogin || !clientLoginPattern.test(clientLogin) || !clientPassword || (op === 'up' && (!clientEmail || !emailPattern.test(clientEmail)))) {
+    if (!clientLogin || typeof clientLogin !== 'string' || !clientLoginPattern.test(clientLogin) 
+        || !clientPassword || typeof clientPassword  !== 'string' 
+        || (op === 'up' && (!clientEmail || typeof clientEmail  !== 'string'  || !emailPattern.test(clientEmail)))) {
         await logLineAsync(logFN, `[${port}] Sign - not valid sign data`);
 
         res.status(400).end();
